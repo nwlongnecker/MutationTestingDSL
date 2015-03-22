@@ -1,51 +1,67 @@
-
 grammar Mutator;
- 
+
 // Parser rules
-mutFile : 			(strainsFile | script) EOF ;
-script :			mutantZero killWith alienStrains? strain* mutation+ ;
+mutFile : 		command* | EOF ;
 
-strainsFile :	strain+ ;
+command :		source | addSource | removeSource | listSource
+				| test | addTest   | removeTest   | listTest
+				| use
+				| strain
+				| mutate ;
 
-mutantZero :	MUTANT_ZERO fileList ;
-killWith :		KILL_WITH fileList ;
-alienStrains :	ALIEN_STRAINS fileList ;
+source :		SOURCE COLON fileList ;
+test :			TEST COLON fileList ;
+use :			USE fileList ;
 
-strain :		STRAIN ID mutation+ END ;
+addSource :		ADD SOURCE fileList ;
+removeSource :	REMOVE SOURCE fileList ;
+addTest :		ADD TEST fileList ;
+removeTest :	REMOVE TEST fileList ;
+listSource :	LIST SOURCE ;
+listTest :		LIST TEST ;
 
-mutation :		MUTATE (idList | symbolList TO symbolList) ;
+strain :		STRAIN ID mutate+ END ;
+
+mutate :		MUTATE (idList | symbolList TO symbolList) ;
 
 idList :		ID (COMMA ID)* ;
 symbolList :	SYMBOL (COMMA SYMBOL)* ;
-fileList :		FILENAME (COMMA FILENAME)* ;
+fileList :		(FILEPATH | DIRNAME) (COMMA (FILEPATH | DIRNAME))* ;
 
 /* Lexical rules */
 
 // Separators and operators
 COMMA :			',' ;
+COLON :			':' ;
 
 // Reserved words
-MUTANT_ZERO :	'mutant zero:' ;
-KILL_WITH :		'kill with:' ;
-ALIEN_STRAINS :	'alien strains:' ;
+SOURCE :		'source' ;
+TEST :			'test' ;
+USE :			'use' ;
+ADD :			'add' ;
+REMOVE :		'remove' ;
+LIST :			'list' ;
 STRAIN :		'strain' ;
 END :			'end' ;
 MUTATE :		'mutate' ;
 TO :			'to' ;
 
 // The rest
-ID : 			LETTER (LETTER|DIGIT|'_'|'?')* ;
+ID : 			LETTER (LETTER|DIGIT|'_')* ;
 // Supposed to match any file or directory name
-FILENAME : 		LETTER (LETTER|DIGIT|'_'|'?'|'.'|'/')* ;
-// Will probably change, should at least be able to match +, -, &&, ||, etc.
-// Language could/should be expanded to allow other types of mutations
-SYMBOL :		[~!&*+/|<>=\-]+ ;
+DIRNAME :		((LETTER|DIGIT|'_')+ | ('.' | '..')) '/'? ;
+FILEPATH :		(DIRNAME)* FILENAME ;
+FILENAME : 		(LETTER|DIGIT|'_'|'.')+ ;
 
 WS :			([ \t\r\n] | COMMENT)+ -> skip ;
 COMMENT :		'#' .*? ('\n'|EOF);
+
+// Will probably change, should at least be able to match +, -, &&, ||, etc.
+// Language could/should be expanded to allow other types of mutations
+SYMBOL :		(~([ \t\r\n#,:]))+ ;
 
 fragment
 LETTER :		[A-Za-z] ;
 
 fragment
-DIGIT :		[0-9] ;
+DIGIT :			[0-9] ;

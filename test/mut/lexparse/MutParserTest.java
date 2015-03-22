@@ -37,8 +37,8 @@ public class MutParserTest
 	@Test
 	public void exampleprogram1()
 	{
-		doParse("mutant zero: source.java "
-				+ "kill with: tests.java "
+		doParse("source: source.java "
+				+ "test: tests.java "
 				+ "mutate && to || "
 				+ "mutate && to || "
 				+ "mutate || to && "
@@ -48,8 +48,8 @@ public class MutParserTest
 	@Test
 	public void exampleprogram2()
 	{
-		doParse("mutant zero: src/ "
-				+ "kill with: test/ "
+		doParse("source: src/ "
+				+ "test: test/ "
 				+ "strain booleanLogic "
 				+ "mutate && to || "
 				+ "mutate || to && "
@@ -68,9 +68,9 @@ public class MutParserTest
 	@Test
 	public void exampleprogram4()
 	{
-		doParse("mutant zero: source.java, source2.java "
-				+ "kill with: test1.java, test2.java "
-				+ "alien strains: strains.mut "
+		doParse("source: source.java, source2.java "
+				+ "test: test1.java, test2.java "
+				+ "use strains.mut "
 				+ "mutate math ");
 	}
 	

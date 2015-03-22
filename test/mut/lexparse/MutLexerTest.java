@@ -28,47 +28,95 @@ public class MutLexerTest
 	private MutatorLexer lexer;
 	private Token t;
 	
-//	@Test
-//	public void recognizeReservedWords()
-//	{
-//		makeLexer("boolean false fi if input int print program true float do od mod div");
-//		checkNextToken(BOOLEAN, "boolean");
-//		checkNextToken(FALSE, "false");
-//		checkNextToken(FI, "fi");
-//		checkNextToken(IF, "if");
-//		checkNextToken(INPUT, "input");
-//		checkNextToken(INT, "int");
-//		checkNextToken(PRINT, "print");
-//		checkNextToken(PROGRAM, "program");
-//		checkNextToken(TRUE, "true");
-//		checkNextToken(FLOAT, "float");
-//		checkNextToken(DO, "do");
-//		checkNextToken(OD, "od");
-//		checkNextToken(MOD, "mod");
-//		checkNextToken(DIV, "div");
-//	}
-//	
-//	@Test
-//	public void recognizeSeparators()
-//	{
-//		makeLexer(";()::,|&");
-//		checkNextToken(SEMICOLON, ";");
-//		checkNextToken(LPAR, "(");
-//		checkNextToken(RPAR, ")");
-//		checkNextToken(GUARD, "::");
-//		checkNextToken(COMMA, ",");
-//		checkNextToken(PIPE, "|");
-//		checkNextToken(AMP, "&");
-//		nextToken();
-//		assertEquals(EOF, t.getType());
-//	}
+	@Test
+	public void recognizeReservedWords()
+	{
+		makeLexer("source test add remove list use strain end mutate to");
+		checkNextToken(SOURCE, "source");
+		checkNextToken(TEST, "test");
+		checkNextToken(ADD, "add");
+		checkNextToken(REMOVE, "remove");
+		checkNextToken(LIST, "list");
+		checkNextToken(USE, "use");
+		checkNextToken(STRAIN, "strain");
+		checkNextToken(END, "end");
+		checkNextToken(MUTATE, "mutate");
+		checkNextToken(TO, "to");
+	}
 	
-//	@Test
-//	public void recognizeAssignOp()
-//	{
-//		makeLexer("<-");
-//		checkNextToken(ASSIGN, "<-");
-//	}
+	@Test
+	public void recognizeSeparators()
+	{
+		makeLexer(",:");
+		checkNextToken(COMMA, ",");
+		checkNextToken(COLON, ":");
+		nextToken();
+		assertEquals(EOF, t.getType());
+	}
+	
+	@Test
+	public void recognizeSimpleIDs()
+	{
+		makeLexer("hello Test1 var_1 isOpen");
+		checkNextToken(ID, "hello");
+		checkNextToken(ID, "Test1");
+		checkNextToken(ID, "var_1");
+		checkNextToken(ID, "isOpen");
+	}
+	
+	@Test
+	public void recognizeFilenames()
+	{
+		makeLexer("hello.txt Test1/ var_1/go.cmd ../../isOpen . ./ ../ ..");
+		checkNextToken(FILEPATH, "hello.txt");
+		checkNextToken(DIRNAME, "Test1/");
+		checkNextToken(FILEPATH, "var_1/go.cmd");
+		checkNextToken(FILEPATH, "../../isOpen");
+		checkNextToken(DIRNAME, ".");
+		checkNextToken(DIRNAME, "./");
+		checkNextToken(DIRNAME, "../");
+		checkNextToken(DIRNAME, "..");
+	}
+	
+	@Test
+	public void recognizeSymbols()
+	{
+		makeLexer("~!@$%^&*()_-`= +\\|[]{};'./<>?\"");
+		checkNextToken(SYMBOL, "~!@$%^&*()_-`=");
+		checkNextToken(SYMBOL, "+\\|[]{};'./<>?\"");
+	}
+	
+	@Test
+	public void emptyStringReturnsEOF()
+	{
+		makeLexer("");
+		nextToken();
+		assertEquals(EOF, t.getType());
+	}
+	
+	@Test
+	public void testIgnoreWhitespace() {
+		makeLexer("\n ,\t\r");
+		checkNextToken(COMMA, ",");
+		nextToken();
+		assertEquals(EOF, t.getType());
+	}
+
+	@Test
+	public void testIgnoreComment() {
+		makeLexer("# comment");
+		nextToken();
+		assertEquals(EOF, t.getType());
+	}
+	
+	@Test
+	public void testCommentThenToken() {
+		makeLexer("mutate#myComment\n,\t");
+		checkNextToken(MUTATE, "mutate");
+		checkNextToken(COMMA, ",");
+		nextToken();
+		assertEquals(EOF, t.getType());
+	}
 	
 	// Helper methods
 	private void makeLexer(String text)

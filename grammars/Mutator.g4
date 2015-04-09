@@ -26,7 +26,7 @@ mutate :		MUTATE (idList | symbolList TO symbolList) ;
 
 idList :		ID (COMMA ID)* ;
 symbolList :	SYMBOL (COMMA SYMBOL)* ;
-fileList :		(FILEPATH | DIRNAME) (COMMA (FILEPATH | DIRNAME))* ;
+fileList :		FILEPATH (COMMA FILEPATH)* ;
 
 /* Lexical rules */
 
@@ -49,8 +49,8 @@ TO :			'to' ;
 // The rest
 ID : 			LETTER (LETTER|DIGIT|'_')* ;
 // Supposed to match any file or directory name
+FILEPATH :		(DIRNAME '/')* DIRNAME | (DIRNAME)* FILENAME ;
 DIRNAME :		((LETTER|DIGIT|'_')+ | ('.' | '..')) '/'? ;
-FILEPATH :		(DIRNAME)* FILENAME ;
 FILENAME : 		(LETTER|DIGIT|'_'|'.')+ ;
 
 WS :			([ \t\r\n] | COMMENT)+ -> skip ;

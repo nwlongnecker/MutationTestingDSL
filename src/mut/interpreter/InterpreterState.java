@@ -38,6 +38,22 @@ public class InterpreterState {
 	}
 
 	/**
+	 * @param sourceFiles the sourceFiles to add
+	 */
+	public void addSourceFiles(Collection<String> sourceFiles) {
+		this.sourceFiles.addAll(sourceFiles);
+	}
+
+	/**
+	 * @param sourceFiles the sourceFiles to remove
+	 */
+	public void removeSourceFiles(Collection<String> sourceFiles) {
+		for (String file : sourceFiles) {
+			this.sourceFiles.remove(file);
+		}
+	}
+
+	/**
 	 * @return the testFiles
 	 */
 	public Collection<String> getTestFiles() {
@@ -50,6 +66,36 @@ public class InterpreterState {
 	public void setTestFiles(Collection<String> testFiles) {
 		this.testFiles.clear();
 		this.testFiles.addAll(testFiles);
+	}
+
+	/**
+	 * @param testFiles the testFiles
+	 */
+	public void addTestFiles(Collection<String> testFiles) {
+		this.testFiles.addAll(testFiles);
+	}
+
+	/**
+	 * @param testFiles the testFiles to remove
+	 */
+	public void removeTestFiles(Collection<String> testFiles) {
+		for (String file : testFiles) {
+			this.testFiles.remove(file);
+		}
+	}
+
+	/**
+	 * @return the useFiles
+	 */
+	public Collection<String> getUseFiles() {
+		return useFiles;
+	}
+
+	/**
+	 * @param files the files
+	 */
+	public void addUseFiles(Collection<String> useFiles) {
+		this.useFiles.addAll(useFiles);
 	}
 
 }

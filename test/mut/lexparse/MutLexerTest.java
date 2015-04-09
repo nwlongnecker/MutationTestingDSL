@@ -67,15 +67,16 @@ public class MutLexerTest
 	@Test
 	public void recognizeFilenames()
 	{
-		makeLexer("hello.txt Test1/ var_1/go.cmd ../../isOpen . ./ ../ ..");
+		makeLexer("hello.txt Test1/ var_1/go.cmd ../../isOpen . ./ ../ .. var/bar/");
 		checkNextToken(FILEPATH, "hello.txt");
-		checkNextToken(DIRNAME, "Test1/");
+		checkNextToken(FILEPATH, "Test1/");
 		checkNextToken(FILEPATH, "var_1/go.cmd");
 		checkNextToken(FILEPATH, "../../isOpen");
-		checkNextToken(DIRNAME, ".");
-		checkNextToken(DIRNAME, "./");
-		checkNextToken(DIRNAME, "../");
-		checkNextToken(DIRNAME, "..");
+		checkNextToken(FILEPATH, ".");
+		checkNextToken(FILEPATH, "./");
+		checkNextToken(FILEPATH, "../");
+		checkNextToken(FILEPATH, "..");
+		checkNextToken(FILEPATH, "var/bar/");
 	}
 	
 	@Test

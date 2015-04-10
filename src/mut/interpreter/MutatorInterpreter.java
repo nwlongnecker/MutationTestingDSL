@@ -112,21 +112,21 @@ public class MutatorInterpreter extends MutatorBaseVisitor<Collection<String>> {
 		// Do the mutations
 		
 		
-		// Find the test classes
-		JUnitCore junit = new JUnitCore();
-		Collection<Class<?>> classes = new HashSet<Class<?>>();
-		for (String file : state.getTestFiles()) {
-			Class<?> c = Utility.getClass(file);
-			if (c != null) {
-				classes.add(c);
-				MutatorRuntime.printMessage("Running " + file + " on mutated code");
-			}
-		}
-		//Run JUnit tests
-		if (!classes.isEmpty()) {
-			Result result = junit.run(classes.toArray(new Class<?>[0]));
-			MutatorRuntime.reportResults(result);
-		}
+//		// Find the test classes
+//		JUnitCore junit = new JUnitCore();
+//		Collection<Class<?>> classes = new HashSet<Class<?>>();
+//		for (String file : state.getTestFiles()) {
+//			Class<?> c = Utility.getClass(file);
+//			if (c != null) {
+//				classes.add(c);
+//				MutatorRuntime.printMessage("Running " + file + " on mutated code");
+//			}
+//		}
+//		//Run JUnit tests
+//		if (!classes.isEmpty()) {
+//			Result result = junit.run(classes.toArray(new Class<?>[0]));
+//			MutatorRuntime.reportResults(result);
+//		}
 		return null;//visitChildren(ctx);
 	}
 	

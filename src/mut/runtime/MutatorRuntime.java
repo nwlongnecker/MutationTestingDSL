@@ -4,10 +4,14 @@ import java.io.PrintStream;
 import java.util.Collection;
 
 import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 public class MutatorRuntime {
-	
+
 	private static PrintStream out;
+	private static PrintStream err;
+	
+	private static boolean verbose = true;
 
 	/**
 	 * @param out the out to set
@@ -35,13 +39,34 @@ public class MutatorRuntime {
 		if(out == null) out = System.out;
 		out.println(message);
 	}
+	
+	public static void print(String message) {
+		if(out == null) out = System.out;
+		out.print(message);
+	}
+	
+	public static void printError(String message) {
+		if(err == null) err = System.err;
+		err.println(message);
+	}
 
 	public static void reportResults(Result result) {
 		if(out == null) out = System.out;
-		if (!result.wasSuccessful()) {
-			out.println("Mutant killed!");
+		if(verbose) {
+			for(Failure fail : result.getFailures()) {
+				out.println(fail.getMessage());
+			}
+			if (!result.wasSuccessful()) {
+				out.println("Mutant killed!");
+			} else {
+				out.println("Mutant survived");
+			}
 		} else {
-			out.println("Mutant survived");
+			if (!result.wasSuccessful()) {
+				out.println("Mutant killed!");
+			} else {
+				out.println("Mutant survived");
+			}
 		}
 	}
 }

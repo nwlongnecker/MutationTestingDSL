@@ -19,6 +19,11 @@ public class MathFunctionsTest {
 	}
 	
 	@Test
+	public void testAddThenSubtract() {
+		assertEquals(-8, MathFunctions.addThenSubtract(7, 4, 19));
+	}
+	
+	@Test
 	public void testMultiply() {
 		assertEquals(4, MathFunctions.multiply(2, 2));
 	}

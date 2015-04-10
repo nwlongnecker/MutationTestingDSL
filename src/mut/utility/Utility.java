@@ -4,31 +4,16 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class Utility {
+import mut.runtime.MutatorRuntime;
 
-	/**
-	 * Takes a given string and attempts to find the class associated with it.
-	 * Prefers files in the form of package.package.package.classname, but if that fails then
-	 * assumes the string is a filepath and parses the folders as packages.
-	 * @param filename The string describing the file
-	 * @return Returns the class file if found, null otherwise
-	 */
-	public static Class<?> getClass(String filename) {
-		Class<?> c = null;
-		
-		try {
-			c = Class.forName(getClassname(filename));
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		return c;
-	}
+public class Utility {
 	
 	/**
 	 * Reads the specified file and returns the contents as a string
@@ -40,10 +25,40 @@ public class Utility {
 		try {
 			encoded = Files.readAllBytes(Paths.get(path));
 		} catch (IOException e) {
-			System.out.println("Error reading from file " + e.getMessage());
+			MutatorRuntime.printError("Error reading from file " + e.getMessage());
 			return null;
 		}
 		return new String(encoded);
+	}
+	
+	/**
+	 * Writes the specified contents to the specified file
+	 * @param path Path to the file
+	 * @return The file contents
+	 */
+	public static boolean writeFile(String path, String contents)	{
+		try (FileWriter fw = new FileWriter(path)) {
+			fw.append(contents);
+		} catch (IOException e) {
+			MutatorRuntime.printError("Error writing file " + e.getMessage());
+			return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * Writes the specified contents to the specified file
+	 * @param file The file
+	 * @return The file contents
+	 */
+	public static boolean writeFile(File file, String contents)	{
+		try (FileWriter fw = new FileWriter(file)) {
+			fw.append(contents);
+		} catch (IOException e) {
+			MutatorRuntime.printError("Error writing file " + e.getMessage());
+			return false;
+		}
+		return true;
 	}
 	
 	/**
@@ -83,5 +98,31 @@ public class Utility {
 			e.printStackTrace();
 		}
 		return packageDecl + "." + className;
+	}
+	
+	/**
+	 * Gets the file name with package extensions by reading the file and looking for the package
+	 * and class declaration lines
+	 * @param filename The name of the file to parse
+	 * @return The filename of the file
+	 */
+	public static String getFilename(String filename) {
+		return getClassname(filename).replace('.', '/').concat(".java");
+	}
+	
+	public static boolean deleteDirectory(File directory) {
+	    if(directory.exists()){
+	        File[] files = directory.listFiles();
+	        if(null!=files){
+	            for(int i=0; i<files.length; i++) {
+	                if(files[i].isDirectory()) {
+	                    deleteDirectory(files[i]);
+	                } else {
+	                    files[i].delete();
+	                }
+	            }
+	        }
+	    }
+	    return directory.delete();
 	}
 }

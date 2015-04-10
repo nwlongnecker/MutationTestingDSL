@@ -17,4 +17,8 @@ public class MathFunctions {
 	public static int divide(int one, int two) {
 		return one / two;
 	}
+	
+	public static int addThenSubtract(int one, int two, int three) {
+		return one + two - three;
+	}
 }

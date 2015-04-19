@@ -11,7 +11,7 @@ public class Msg {
 	private static PrintStream out;
 	private static PrintStream err;
 	
-	private static boolean verbose = true;
+	public static boolean verbose = true;
 
 	/**
 	 * @param out the out to set

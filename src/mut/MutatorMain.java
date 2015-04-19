@@ -39,6 +39,11 @@ public class MutatorMain {
 		}
 	}
 	
+	/**
+	 * Creates a read evaluate print loop for use on the command line
+	 * @param in The stream to use for input
+	 * @param out The stream to use for output
+	 */
 	public static void repl(InputStream in, PrintStream out) {
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
 		Msg.setOut(out);
@@ -77,6 +82,11 @@ public class MutatorMain {
 		}
 	}
 	
+	/**
+	 * Runs a mutator script
+	 * @param mutatorCode The code to run
+	 * @return Returns the state of the interpreter after execution
+	 */
 	public static InterpreterState executeScript(String mutatorCode) {
 		MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(mutatorCode));
 		ParserRuleContext tree = parser.mutFile();

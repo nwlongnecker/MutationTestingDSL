@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import mut.files.InMemoryFileSystem;
 import mut.util.Msg;
 
 import org.junit.runner.JUnitCore;
@@ -17,13 +18,10 @@ import org.junit.runner.Result;
 public class MutatorJUnitRunner {
 	private ClassLoader classLoader;
 	private JUnitCore junit;
-	
-	private boolean verbose;
 
 	public MutatorJUnitRunner(ClassLoader classLoader) {
 		this.classLoader = classLoader;
 		junit = new JUnitCore();
-		verbose = false;
 	}
 	
 	public Collection<Class<?>> loadClasses(Collection<String> fileNames) throws ClassNotFoundException {
@@ -33,7 +31,7 @@ public class MutatorJUnitRunner {
 			Class<?> c = classLoader.loadClass(className);
 			if (c != null) {
 				classes.add(c);
-				if (verbose) {
+				if (Msg.verbose) {
 					Msg.msgln("Loaded test " + c.getName() + " from file " + fileName);
 				}
 			}
@@ -71,32 +69,24 @@ public class MutatorJUnitRunner {
 	public static String getClassname(String filename) {
 	    String packageDecl = null;
 	    String className = null;
-		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-		    String line;
-		    String packageRegexp = "\\bpackage\\s*(.*?);";
-		    Pattern packagePattern = Pattern.compile(packageRegexp);
-		    String classRegexp = "\\bpublic.*?class\\s*(.*?)\\s.*?$";
-		    Pattern classPattern = Pattern.compile(classRegexp);
-		    while ((line = br.readLine()) != null) {
-		    	line = line.trim();
-		    	// Package declaration must come first
-		    	if (packageDecl == null) {
-		    		Matcher match = packagePattern.matcher(line);
-		    		if (match.find()) {
-		    			packageDecl = match.group(1);
-		    		}
-		    	} else {
-		    		Matcher match = classPattern.matcher(line);
-		    		if (match.find()) {
-		    			className = match.group(1);
-		    			break;
-		    		}
-		    	}
-		    }
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
+		String fileContents = "";
+		try {
+			fileContents = InMemoryFileSystem.getFile(filename).getCharContent(false).toString();
 		} catch (IOException e) {
 			e.printStackTrace();
+		}
+	    String packageRegexp = "\\bpackage\\s*(.*?);";
+	    Pattern packagePattern = Pattern.compile(packageRegexp);
+		Matcher match = packagePattern.matcher(fileContents);
+		if (match.find()) {
+			packageDecl = match.group(1);
+		}
+	    
+	    String classRegexp = ".*?\\bpublic.*?class\\s*(.*?)\\s.*?";
+	    Pattern classPattern = Pattern.compile(classRegexp);
+		match = classPattern.matcher(fileContents);
+		if (match.find()) {
+			className = match.group(1);
 		}
 		return packageDecl + "." + className;
 	}

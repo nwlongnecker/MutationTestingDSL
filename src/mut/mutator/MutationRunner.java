@@ -24,7 +24,6 @@ public class MutationRunner extends Thread {
 	private final Collection<String> mutateFrom;
 	private final Collection<String> mutateTo;
 	private final JavaCompiler compiler;
-	private final boolean verbose;
 	private final InMemoryFileManager fileManager;
 
 	public MutationRunner(InterpreterState state, Collection<String> mutateFrom, Collection<String> mutateTo, InMemoryFileManager fileManager) {
@@ -33,7 +32,6 @@ public class MutationRunner extends Thread {
 		this.mutateFrom = mutateFrom;
 		this.mutateTo = mutateTo;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
-		verbose = false;
 		this.fileManager = fileManager;
 	}
 	
@@ -50,7 +48,7 @@ public class MutationRunner extends Thread {
 		if (origTestRunner.runTests(testFiles).wasSuccessful()) {
 			print("Tests pass on unmutated code: check");
 		} else {
-			print("Tests do not pass on unmutated code");
+			Msg.err(getId() + ": Tests do not pass on unmutated code");
 			return;
 		}
 		
@@ -67,7 +65,9 @@ public class MutationRunner extends Thread {
 							InMemoryFileSystem.addFile(filename, mutatedSourceContents);
 							compile(filename);
 							
-//							print("Testing with " + getShortFileNames(testFiles));
+							if (Msg.verbose) {
+								print("Testing with " + getShortFileNames(testFiles));
+							}
 							MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
 							if (testRunner.runTests(testFiles).wasSuccessful()) {
 								print(getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Tests passed on mutating " + from + " to " + to);
@@ -108,17 +108,17 @@ public class MutationRunner extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (verbose) {
+		if (Msg.verbose) {
 			for (String filename : filenames) {
-				System.out.println("Compiling " + filename);
+				Msg.msgln("Compiling " + filename);
 			}
 		}
 		boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, files).call();
-		if (verbose) {
-			System.out.println("Compiled Successfully: " + success);
+		if (Msg.verbose) {
+			Msg.msgln("Compiled Successfully: " + success);
 		}
 		for(Diagnostic<? extends JavaFileObject> d: diagnostics.getDiagnostics()) {
-			System.out.println(d.getMessage(null));
+			Msg.err(d.getMessage(null));
 		}
 	}
 	

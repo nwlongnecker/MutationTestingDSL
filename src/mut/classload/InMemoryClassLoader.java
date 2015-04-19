@@ -1,11 +1,11 @@
 package mut.classload;
 
 import mut.files.CompiledCode;
+import mut.util.Msg;
 
 public class InMemoryClassLoader extends ClassLoader {
 	
 	private CompiledClasses compiledClasses;
-	private final boolean verbose = false;
 
 	public InMemoryClassLoader(ClassLoader parent, CompiledClasses compiledClasses) {
 		super(parent);
@@ -14,8 +14,8 @@ public class InMemoryClassLoader extends ClassLoader {
 
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
-    	if (verbose) {
-    		System.out.println("Looking for loaded class " + name);
+    	if (Msg.verbose) {
+    		Msg.msgln("Looking for loaded class " + name);
     	}
         CompiledCode cc = compiledClasses.getCode(name);
         if (cc == null) {

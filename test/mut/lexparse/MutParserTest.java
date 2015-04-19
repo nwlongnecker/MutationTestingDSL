@@ -13,16 +13,18 @@ package mut.lexparse;
 
 import static org.junit.Assert.assertTrue;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Arrays;
+import java.util.List;
 
 import javax.swing.JFrame;
 
-import org.antlr.v4.runtime.*;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.gui.TreeViewer;
 import org.junit.Test;
-
-import mut.utility.MutatorFactory;
 
 /**
  * Description
@@ -32,7 +34,6 @@ public class MutParserTest
 {
 	private MutatorParser parser;
 	private ParserRuleContext tree;
-	private boolean stopViewer;
 	
 	@Test
 	public void exampleprogram1()
@@ -77,7 +78,7 @@ public class MutParserTest
 	// Helper methods
 	private void makeParser(String inputText)
 	{
-		parser = MutatorFactory.makeParser(new ANTLRInputStream(inputText));
+		parser = LexerParserFactory.makeParser(new ANTLRInputStream(inputText));
 	}
 
 	/**
@@ -96,6 +97,7 @@ public class MutParserTest
 	/**
 	 * Call this routine to display the parse tree. Hit ENTER on the console to continue.
 	 */
+	@SuppressWarnings("unused")
 	private void showTree()
 	{
 		System.out.println(tree.toStringTree());
@@ -113,7 +115,6 @@ public class MutParserTest
         try {
 			br.readLine();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

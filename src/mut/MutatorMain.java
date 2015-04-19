@@ -3,19 +3,18 @@
  */
 package mut;
 
-import java.io.*;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.PrintStream;
 
+import mut.files.FileReader;
 import mut.interpreter.InterpreterState;
 import mut.interpreter.MutatorInterpreter;
-import mut.lexparse.MutatorLexerException;
+import mut.lexparse.LexerParserFactory;
 import mut.lexparse.MutatorParser;
-import mut.lexparse.MutatorParserException;
-import mut.runtime.MutatorRuntime;
-import mut.utility.MutatorFactory;
-import mut.utility.Utility;
+import mut.util.Msg;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -35,14 +34,14 @@ public class MutatorMain {
 			repl(System.in, System.out);
 		} else {
 			for (String filename : args) {
-				executeScript(Utility.readFile(filename));
+				executeScript(FileReader.readFile(filename));
 			}
 		}
 	}
 	
 	public static void repl(InputStream in, PrintStream out) {
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		MutatorRuntime.setOut(out);
+		Msg.setOut(out);
 		InterpreterState state = new InterpreterState();
 		String command = null;
 		MutatorParser parser = null;
@@ -65,7 +64,7 @@ public class MutatorMain {
 				continue;
 			}
 			// Otherwise, attempt to parse the command
-			parser = MutatorFactory.makeParser(new ANTLRInputStream(command));
+			parser = LexerParserFactory.makeParser(new ANTLRInputStream(command));
 			try {
 				tree = parser.command();
 				tree.accept(interpreter);
@@ -79,7 +78,7 @@ public class MutatorMain {
 	}
 	
 	public static InterpreterState executeScript(String mutatorCode) {
-		MutatorParser parser = MutatorFactory.makeParser(new ANTLRInputStream(mutatorCode));
+		MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(mutatorCode));
 		ParserRuleContext tree = parser.mutFile();
 		InterpreterState state = new InterpreterState();
 		tree.accept(new MutatorInterpreter(state));

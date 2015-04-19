@@ -9,7 +9,7 @@
  * Used in CS4533/CS544 at Worcester Polytechnic Institute
  *******************************************************************************/
 
-package mut.utility;
+package mut.lexparse;
 
 import org.antlr.v4.runtime.*;
 import mut.lexparse.*;
@@ -20,7 +20,7 @@ import mut.lexparse.*;
  * 
  * @version Jan 26, 2015
  */
-public class MutatorFactory
+public class LexerParserFactory
 {
 	/**
 	 * Create a Dijkstra lexer using the specified input stream containing the text

@@ -1,4 +1,4 @@
-package utility;
+package mut.files;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -8,11 +8,11 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import mut.utility.Utility;
+import mut.files.FileReader;
 
 import org.junit.Test;
 
-public class UtilityTest {
+public class FileReaderTest {
 
 	@Test
 	public void readFileTest() {
@@ -22,14 +22,14 @@ public class UtilityTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String contents = Utility.readFile(filename);
+		String contents = FileReader.readFile(filename);
 		assertEquals("us\nq\nagsd\n", contents);
 		assertTrue(new File(filename).delete());
 	}
 
 	@Test
 	public void readFileBadPath() {
-		String contents = Utility.readFile("badFilename");
+		String contents = FileReader.readFile("badFilename");
 		assertNull(contents);
 	}
 }

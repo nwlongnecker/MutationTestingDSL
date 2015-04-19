@@ -1,17 +1,13 @@
 package mut;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintStream;
 
-import org.junit.Ignore;
 import org.junit.Test;
-
-import static org.junit.Assert.*;
 
 public class MutatorMainTest {
 	

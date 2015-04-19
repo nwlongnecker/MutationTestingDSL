@@ -4,26 +4,20 @@
 package mut.interpreter;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
-import org.antlr.v4.runtime.tree.TerminalNode;
-import org.junit.runner.JUnitCore;
-import org.junit.runner.Result;
-
-import mut.MutatorMainTest;
-import mut.lexparse.MutatorBaseVisitor;
 import mut.lexparse.MutatorParser;
-import mut.runtime.MutatorRuntime;
-import mut.utility.Utility;
+import mut.util.Msg;
+
+import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
  * Mutator interpreter. Walks the tree and runs the appropriate command
  * @author Nathan
  */
-public class MutatorInterpreter extends MutatorBaseVisitor<Collection<String>> {
+public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collection<String>> {
 	
 	private final InterpreterState state;
 	
@@ -92,13 +86,13 @@ public class MutatorInterpreter extends MutatorBaseVisitor<Collection<String>> {
 
 	@Override
 	public Collection<String> visitListSource(MutatorParser.ListSourceContext ctx) {
-		MutatorRuntime.printList("Sources: ", state.getSourceFiles());
+		Msg.printList("Sources: ", state.getSourceFiles());
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitListTest(MutatorParser.ListTestContext ctx) {
-		MutatorRuntime.printList("Tests: ", state.getTestFiles());
+		Msg.printList("Tests: ", state.getTestFiles());
 		return null;
 	}
 	
@@ -142,11 +136,11 @@ public class MutatorInterpreter extends MutatorBaseVisitor<Collection<String>> {
 		Collection<String> fileList = new HashSet<String>();
 		for (TerminalNode file : files) {
 			File f = new File(file.getText());
-//			if(f.exists()) {
+			if(f.exists()) {
 				fileList.add(file.getText());
-//			} else {
-//				MutatorRuntime.printMessage("File " + file.getText() + " does not exist!");
-//			}
+			} else {
+				Msg.msgln("File " + file.getText() + " does not exist!");
+			}
 		}
 		return fileList;
 	}

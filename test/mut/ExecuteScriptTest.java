@@ -1,63 +1,17 @@
 package mut;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-
 import mut.interpreter.InterpreterState;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
-import org.junit.Ignore;
 import org.junit.Test;
 
 public class ExecuteScriptTest {
 	
 	private InterpreterState state;
-	private static final String DIRNAME = "testExecuteScript/";
 	
 	private void execute(String script) {
 		state = MutatorMain.executeScript(script);
 	}
-	
-	private static boolean deleteDirectory(File directory) {
-	    if(directory.exists()){
-	        File[] files = directory.listFiles();
-	        if(null!=files){
-	            for(int i=0; i<files.length; i++) {
-	                if(files[i].isDirectory()) {
-	                    deleteDirectory(files[i]);
-	                } else {
-	                    files[i].delete();
-	                }
-	            }
-	        }
-	    }
-	    return directory.delete();
-	}
-
-	private static void writeFile(String filename, String contents) {
-		try (FileOutputStream out = new FileOutputStream(filename)) {
-			out.write(contents.getBytes());
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-//	@BeforeClass
-//	public static void setup() {
-//		new File(DIRNAME).mkdir();
-//		new File(DIRNAME + "src").mkdir();
-//		new File(DIRNAME + "test").mkdir();
-//	}
-//	
-//	@AfterClass
-//	public static void teardown() {
-//		deleteDirectory(new File(DIRNAME));
-//	}
 
 	@Test
 	public void setSource() {
@@ -67,7 +21,7 @@ public class ExecuteScriptTest {
 		assertEquals(".gitignore", state.getSourceFiles().toArray()[0]);
 	}
 
-	@Test @Ignore
+	@Test
 	public void setInvalidSource() {
 		execute("source: .gitignore, asdfasdf.file, source/, src/");
 		assertEquals(2, state.getSourceFiles().size());
@@ -83,7 +37,7 @@ public class ExecuteScriptTest {
 		assertEquals("test/", state.getTestFiles().toArray()[1]);
 	}
 
-	@Test @Ignore
+	@Test
 	public void setInvalidTest() {
 		execute("test: .gitignore, asdfasdf.file, tst/, test/");
 		assertEquals(2, state.getTestFiles().size());
@@ -99,7 +53,7 @@ public class ExecuteScriptTest {
 		assertEquals("test/", state.getUseFiles().toArray()[1]);
 	}
 
-	@Test @Ignore
+	@Test
 	public void addInvalidUse() {
 		execute("use .gitignore, asdfasdf.file, tst/, test/");
 		assertEquals(2, state.getUseFiles().size());

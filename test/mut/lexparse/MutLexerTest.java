@@ -11,13 +11,14 @@
 
 package mut.lexparse;
 
+import mut.lexparse.MutatorLexer;
+
 import org.antlr.v4.runtime.*;
 import org.junit.Test;
 
+import static mut.lexparse.MutatorLexer.*;
 import static org.antlr.v4.runtime.Token.EOF;
 import static org.junit.Assert.*;
-import static mut.lexparse.MutatorLexer.*;
-import mut.utility.MutatorFactory;
 
 /**
  * Description
@@ -122,7 +123,7 @@ public class MutLexerTest
 	// Helper methods
 	private void makeLexer(String text)
 	{
-		lexer = MutatorFactory.makeLexer(new ANTLRInputStream(text));
+		lexer = LexerParserFactory.makeLexer(new ANTLRInputStream(text));
 	}
 
 	private void nextToken()

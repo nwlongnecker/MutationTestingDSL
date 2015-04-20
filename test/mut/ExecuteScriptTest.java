@@ -16,6 +16,7 @@ public class ExecuteScriptTest {
 	private InterpreterState state;
 	private String outputString;
 	private String errorString;
+	private Msg msg;
 	
 	@BeforeClass
 	public static void setup() {
@@ -23,11 +24,13 @@ public class ExecuteScriptTest {
 	}
 	
 	private void execute(String script) {
+		msg = new Msg();
+		msg.verbosity = Msg.SPARSE;
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		ByteArrayOutputStream err = new ByteArrayOutputStream();
-		Msg.setOut(new PrintStream(out));
-		Msg.setErr(new PrintStream(err));
-		state = MutatorMain.executeScript(script);
+		msg.setOut(new PrintStream(out));
+		msg.setErr(new PrintStream(err));
+		state = MutatorMain.executeScript(script, new InterpreterState(msg));
 		outputString = out.toString().replaceAll("(^|\n)\\d+: ", "\n");
 		if(!outputString.isEmpty() && outputString.charAt(0) == '\n') {
 			outputString = outputString.substring(1);
@@ -128,7 +131,6 @@ public class ExecuteScriptTest {
 
 	@Test
 	public void mutateCodePasses() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/LogicalFunctions.java "
 				+ "test: sampleMutationFiles/test/LogicalFunctionsTest.java "
 				+ "mutate && to || "
@@ -140,14 +142,17 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
 		assertEquals("Mutating && to || in files LogicalFunctions.java with tests LogicalFunctionsTest.java\r\n"
+				+ "done\r\n"
 				+ "Mutating && to || in files LogicalFunctions.java with tests LogicalFunctionsTest.java\r\n"
+				+ "done\r\n"
 				+ "Mutating || to && in files LogicalFunctions.java with tests LogicalFunctionsTest.java\r\n"
-				+ "Mutating <=,<,>,>= to <=,<,>,>= in files LogicalFunctions.java with tests LogicalFunctionsTest.java\r\n", outputString);
+				+ "done\r\n"
+				+ "Mutating <=,<,>,>= to <=,<,>,>= in files LogicalFunctions.java with tests LogicalFunctionsTest.java\r\n"
+				+ "done\r\n", outputString);
 	}
 
 	@Test
 	public void mutateCodeFailures() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/MathFunctions.java "
 				+ "test: sampleMutationFiles/test/MathFunctionsTest.java "
 				+ "mutate +,-,*,/ to +,-,*,/");
@@ -159,12 +164,12 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
-				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n", outputString);
+				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void addDirectory() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "mutate +,-,*,/ to +,-,*,/");
@@ -178,12 +183,12 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
-				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n", outputString);
+				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void mutateStrain() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "strain math "
@@ -200,12 +205,12 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
-				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n", outputString);
+				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void mutateStrainMultipleLines() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "strain math "
@@ -224,12 +229,13 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n", outputString);
+				+ "done\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void mutateMultipleStrains() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "strain math "
@@ -250,12 +256,13 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n", outputString);
+				+ "done\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void useStrainInOtherFile() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "use sampleMutationFiles/math.mut "
@@ -272,12 +279,12 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
-				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n", outputString);
+				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
+				+ "done\r\n", outputString);
 	}
 	
 	@Test
 	public void redefineStrain() {
-		Msg.verbose = false;
 		execute("source: sampleMutationFiles/src/ "
 				+ "test: sampleMutationFiles/test/ "
 				+ "use sampleMutationFiles/math.mut "
@@ -300,6 +307,8 @@ public class ExecuteScriptTest {
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n", outputString);
+				+ "done\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "done\r\n", outputString);
 	}
 }

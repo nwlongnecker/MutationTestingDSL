@@ -8,40 +8,50 @@ import org.junit.runner.notification.Failure;
 
 public class Msg {
 
-	private static PrintStream out;
-	private static PrintStream err;
+	private PrintStream out;
+	private PrintStream err;
+
+	public static final int VERY_VERBOSE = 5;
+	public static final int VERBOSE = 4;
+	public static final int NORMAL = 3;
+	public static final int DEFAULT = 2;
+	public static final int SPARSE = 1;
 	
-	public static boolean verbose = false;
+	public int verbosity;
+	
+	public Msg() {
+		verbosity = DEFAULT;
+	}
 
 	/**
 	 * @param out the out to set
 	 */
-	public static void setOut(PrintStream out) {
-		Msg.out = out;
+	public void setOut(PrintStream out) {
+		this.out = out;
 	}
 
-	public static void setErr(PrintStream err) {
-		Msg.err = err;
+	public void setErr(PrintStream err) {
+		this.err = err;
 	}
 	
-	public static void msgln(String message) {
+	public void msgln(String message) {
 		if(out == null) out = System.out;
 		out.println(message);
 	}
 	
-	public static void msg(String message) {
+	public void msg(String message) {
 		if(out == null) out = System.out;
 		out.print(message);
 	}
 	
-	public static void err(String message) {
+	public void err(String message) {
 		if(err == null) err = System.err;
 		err.println(message);
 	}
 
-	public static void reportResults(Result result) {
+	public void reportResults(Result result) {
 		if(out == null) out = System.out;
-		if(verbose) {
+		if(verbosity >= NORMAL) {
 			for(Failure fail : result.getFailures()) {
 				out.println(fail.getMessage());
 			}
@@ -59,7 +69,7 @@ public class Msg {
 		}
 	}
 
-	public static void printList(String label, Collection<String> list) {
+	public void printList(String label, Collection<String> list) {
 		if(out == null) out = System.out;
 		StringBuilder sb = new StringBuilder();
 		sb.append(label);

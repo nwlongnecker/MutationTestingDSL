@@ -173,6 +173,18 @@ public class MutatorBaseListener implements MutatorListener {
 	 *
 	 * <p>The default implementation does nothing.</p>
 	 */
+	@Override public void enterReport(MutatorParser.ReportContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
+	@Override public void exitReport(MutatorParser.ReportContext ctx) { }
+	/**
+	 * {@inheritDoc}
+	 *
+	 * <p>The default implementation does nothing.</p>
+	 */
 	@Override public void enterIdList(MutatorParser.IdListContext ctx) { }
 	/**
 	 * {@inheritDoc}

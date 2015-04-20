@@ -90,6 +90,12 @@ public interface MutatorVisitor<T> extends ParseTreeVisitor<T> {
 	 */
 	T visitMutate(MutatorParser.MutateContext ctx);
 	/**
+	 * Visit a parse tree produced by {@link MutatorParser#report}.
+	 * @param ctx the parse tree
+	 * @return the visitor result
+	 */
+	T visitReport(MutatorParser.ReportContext ctx);
+	/**
 	 * Visit a parse tree produced by {@link MutatorParser#idList}.
 	 * @param ctx the parse tree
 	 * @return the visitor result

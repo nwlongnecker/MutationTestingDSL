@@ -1,10 +1,7 @@
 package mut.junit;
 
-import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import mut.files.InMemoryFileSystem;
 import mut.util.Msg;
@@ -15,21 +12,25 @@ import org.junit.runner.Result;
 public class MutatorJUnitRunner {
 	private ClassLoader classLoader;
 	private JUnitCore junit;
+	private InMemoryFileSystem fileSystem;
+	private Msg msg;
 
-	public MutatorJUnitRunner(ClassLoader classLoader) {
+	public MutatorJUnitRunner(ClassLoader classLoader, InMemoryFileSystem fileSystem, Msg msg) {
 		this.classLoader = classLoader;
 		junit = new JUnitCore();
+		this.fileSystem = fileSystem;
+		this.msg = msg;
 	}
 	
 	public Collection<Class<?>> loadClasses(Collection<String> fileNames) throws ClassNotFoundException {
 		Collection<Class<?>> classes = new HashSet<Class<?>>();
 		for(String fileName : fileNames) {
-			String className = getClassname(fileName);
+			String className = fileSystem.getClassname(fileName);
 			Class<?> c = classLoader.loadClass(className);
 			if (c != null) {
 				classes.add(c);
-				if (Msg.verbose) {
-					Msg.msgln("Loaded test " + c.getName() + " from file " + fileName);
+				if (msg.verbosity >= Msg.VERY_VERBOSE) {
+					msg.msgln("Loaded test " + c.getName() + " from file " + fileName);
 				}
 			}
 		}
@@ -53,38 +54,7 @@ public class MutatorJUnitRunner {
 	public void runAndReport(Collection<String> fileNames) {
 		if (!fileNames.isEmpty()) {
 			Result result = runTests(fileNames);
-			Msg.reportResults(result);
+			msg.reportResults(result);
 		}
-	}
-	
-	/**
-	 * Gets the java class name by reading the file and looking for the package
-	 * and class declaration lines
-	 * @param filename The name of the file to parse
-	 * @return The class name of the file
-	 */
-	public static String getClassname(String filename) {
-	    String packageDecl = null;
-	    String className = null;
-		String fileContents = "";
-		try {
-			fileContents = InMemoryFileSystem.getFile(filename).getCharContent(false).toString();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	    String packageRegexp = "\\bpackage\\s*(.*?);";
-	    Pattern packagePattern = Pattern.compile(packageRegexp);
-		Matcher match = packagePattern.matcher(fileContents);
-		if (match.find()) {
-			packageDecl = match.group(1);
-		}
-	    
-	    String classRegexp = ".*?\\bpublic.*?class\\s*(.*?)\\s.*?";
-	    Pattern classPattern = Pattern.compile(classRegexp);
-		match = classPattern.matcher(fileContents);
-		if (match.find()) {
-			className = match.group(1);
-		}
-		return packageDecl + "." + className;
 	}
 }

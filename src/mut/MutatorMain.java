@@ -29,12 +29,13 @@ public class MutatorMain {
 	 * @param args Arguments
 	 */
 	public static void main(String[] args) {
+		Msg msg = new Msg();
 		if(args.length == 0) {
 			System.out.println("Welcome to the Mutator DSL!");
-			repl(System.in, System.out);
+			repl(System.in, System.out, msg);
 		} else {
 			for (String filename : args) {
-				executeScript(FileReader.readFile(filename));
+				executeScript(FileReader.readFile(filename, msg), new InterpreterState(msg));
 			}
 		}
 	}
@@ -44,10 +45,10 @@ public class MutatorMain {
 	 * @param in The stream to use for input
 	 * @param out The stream to use for output
 	 */
-	public static void repl(InputStream in, PrintStream out) {
+	public static void repl(InputStream in, PrintStream out, Msg msg) {
 		BufferedReader br = new BufferedReader(new InputStreamReader(in));
-		Msg.setOut(out);
-		InterpreterState state = new InterpreterState();
+		msg.setOut(out);
+		InterpreterState state = new InterpreterState(msg);
 		String command = null;
 		MutatorParser parser = null;
 		ParserRuleContext tree = null;
@@ -63,7 +64,7 @@ public class MutatorMain {
 				break;
 			}
 			// If the user wants to exit, exit
-			if (command.equals("quit") || command.equals("q") || command.equals("exit")) {
+			if (command.equalsIgnoreCase("quit") || command.equalsIgnoreCase("q") || command.equalsIgnoreCase("exit")) {
 				break;
 			} else if (command.isEmpty()) {
 				continue;
@@ -75,6 +76,7 @@ public class MutatorMain {
 				tree.accept(interpreter);
 			} catch (Exception e) {
 				System.err.flush();
+				System.out.println(e.getMessage());
 				if(!out.equals(System.out)) {
 					out.println(e.getMessage());
 				}
@@ -93,14 +95,5 @@ public class MutatorMain {
 		ParserRuleContext tree = parser.mutFile();
 		tree.accept(new MutatorInterpreter(initialState));
 		return initialState;
-	}
-	
-	/**
-	 * Runs a mutator script
-	 * @param mutatorCode The code to run
-	 * @return Returns the state of the interpreter after execution
-	 */
-	public static InterpreterState executeScript(String mutatorCode) {
-		return executeScript(mutatorCode, new InterpreterState());
 	}
 }

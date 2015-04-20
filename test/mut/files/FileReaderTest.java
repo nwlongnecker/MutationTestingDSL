@@ -9,6 +9,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 import mut.files.FileReader;
+import mut.util.Msg;
 
 import org.junit.Test;
 
@@ -22,14 +23,14 @@ public class FileReaderTest {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		String contents = FileReader.readFile(filename);
+		String contents = FileReader.readFile(filename, new Msg());
 		assertEquals("us\nq\nagsd\n", contents);
 		assertTrue(new File(filename).delete());
 	}
 
 	@Test
 	public void readFileBadPath() {
-		String contents = FileReader.readFile("badFilename");
+		String contents = FileReader.readFile("badFilename", new Msg());
 		assertNull(contents);
 	}
 }

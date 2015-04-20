@@ -9,15 +9,17 @@ import mut.util.Msg;
 
 public class SymbolTable {
 	
-	private Map<String, List<MutatorParser.MutateContext>> strainSymbols;
+	private final Map<String, List<MutatorParser.MutateContext>> strainSymbols;
+	private final Msg msg;
 
-	public SymbolTable() {
+	public SymbolTable(Msg msg) {
 		strainSymbols = new HashMap<String, List<MutatorParser.MutateContext>>();
+		this.msg = msg;
 	}
 	
 	public void add(String symbol, List<MutatorParser.MutateContext> strain) {
 		if (strainSymbols.containsKey(symbol)) {
-			Msg.msgln("Redefined strain " + symbol);
+			msg.msgln("Redefined strain " + symbol);
 		}
 		strainSymbols.put(symbol, strain);
 	}

@@ -11,14 +11,15 @@ public class FileReader {
 	/**
 	 * Reads the specified file and returns the contents as a string
 	 * @param path Path to the file
+	 * @param msg The messager to report errors to
 	 * @return The file contents
 	 */
-	public static String readFile(String path)	{
+	public static String readFile(String path, Msg msg)	{
 		String ret = null;
 		try {
 			ret = new String(Files.readAllBytes(Paths.get(path)));
 		} catch (IOException e) {
-			Msg.err("Error reading from file " + e.getMessage());
+			msg.err("Error reading from file " + e.getMessage());
 		}
 		return ret;
 	}

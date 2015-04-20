@@ -7,6 +7,8 @@ import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.PrintStream;
 
+import mut.util.Msg;
+
 import org.junit.Test;
 
 public class MutatorMainTest {
@@ -15,7 +17,7 @@ public class MutatorMainTest {
 		InputStream in = new ByteArrayInputStream(input.getBytes());
 		ByteArrayOutputStream bytes = new ByteArrayOutputStream();
 		PrintStream out = new PrintStream(bytes);
-		MutatorMain.repl(in, out);
+		MutatorMain.repl(in, out, new Msg());
 		return bytes.toString();
 	}
 

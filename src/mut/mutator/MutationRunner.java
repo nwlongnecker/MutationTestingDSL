@@ -15,6 +15,8 @@ import mut.files.InMemoryFileManager;
 import mut.files.InMemoryFileSystem;
 import mut.interpreter.InterpreterState;
 import mut.junit.MutatorJUnitRunner;
+import mut.statistics.StatisticsCollector;
+import mut.statistics.Survivor;
 import mut.util.Msg;
 
 public class MutationRunner extends Thread {
@@ -25,14 +27,20 @@ public class MutationRunner extends Thread {
 	private final Collection<String> mutateTo;
 	private final JavaCompiler compiler;
 	private final InMemoryFileManager fileManager;
+	private final InMemoryFileSystem fileSystem;
+	private final Msg msg;
+	private final StatisticsCollector statistics;
 
-	public MutationRunner(InterpreterState state, Collection<String> mutateFrom, Collection<String> mutateTo, InMemoryFileManager fileManager) {
+	public MutationRunner(InterpreterState state, Collection<String> mutateFrom, Collection<String> mutateTo, InMemoryFileManager fileManager, StatisticsCollector statistics) {
 		sourceFiles = state.getSourceFiles();
 		testFiles = state.getTestFiles();
 		this.mutateFrom = mutateFrom;
 		this.mutateTo = mutateTo;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.fileManager = fileManager;
+		this.fileSystem = state.getFileSystem();
+		this.msg = state.getMsg();
+		this.statistics = statistics;
 	}
 	
 	@Override
@@ -44,60 +52,69 @@ public class MutationRunner extends Thread {
 		compileFiles.addAll(sourceFiles);
 		compileFiles.addAll(testFiles);
 		if(!compile(compileFiles)) {
-			Msg.err(getId() + ": Supplied code does not compile! Did you include every file in the classpath?");
+			msg.err(getId() + ": Supplied code does not compile! Did you include every file in the classpath?");
 			return;
 		}
-		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
+		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);
 		if (origTestRunner.runTests(testFiles).wasSuccessful()) {
-			if(Msg.verbose) {
+			if(msg.verbosity >= Msg.NORMAL) {
 				print("Tests pass on unmutated code: check");
 			}
 		} else {
-			Msg.err(getId() + ": Tests do not pass on unmutated code");
+			msg.err(getId() + ": Tests do not pass on unmutated code");
 			return;
 		}
 		
 		// Do the mutations
+		try {
 		for (String from : mutateFrom) {
 			for (String to : mutateTo) {
 				if (!from.equals(to)) {
-					if(Msg.verbose) {
+					if(msg.verbosity >= Msg.NORMAL) {
 						print("Mutating " + from + " to " + to);
 					}
 					for(String filename : sourceFiles) {
-						String originalSourceContents = InMemoryFileSystem.getOriginalSourceFile(filename);
+						String originalSourceContents = fileSystem.getOriginalSourceFile(filename);
 						int currentReplacementIndex = originalSourceContents.indexOf(from);
 						while (currentReplacementIndex > -1) {
 							String mutatedSourceContents = originalSourceContents.substring(0, currentReplacementIndex) +
 									originalSourceContents.substring(currentReplacementIndex).replaceFirst(escapeSpecialChars(from), to);
-							InMemoryFileSystem.addFile(filename, mutatedSourceContents);
+							fileSystem.addFile(filename, mutatedSourceContents);
+							String line = getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents);
 							
 							if(compile(filename)) {
-								if (Msg.verbose) {
+								if (msg.verbosity >= Msg.VERBOSE) {
 									print(getShortFilename(filename) + ": Testing with " + getShortFileNames(testFiles));
 								}
-								MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
+								MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);
 								if (testRunner.runTests(testFiles).wasSuccessful()) {
-									print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Mutant survived when mutating " + from + " to " + to);
+									statistics.logSurvivor(filename, new Survivor(line, from, to));
+									print(getShortFilename(filename) + " " + line + ": Mutant survived when mutating " + from + " to " + to);
 								} else {
-									if(Msg.verbose) {
-										print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Tests failed, mutant killed");
+									statistics.incrementKilled(filename);
+									if(msg.verbosity >= Msg.NORMAL) {
+										print(getShortFilename(filename) + " " + line + ": Tests failed, mutant killed");
 									}
 								}
 							} else {
-								if (Msg.verbose) {
-									print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Stillborn mutant");
+								statistics.incrementStillborn(filename);
+								if (msg.verbosity >= Msg.NORMAL) {
+									print(getShortFilename(filename) + " " + line + ": Stillborn mutant");
 								}
 							}
 							
 							currentReplacementIndex = originalSourceContents.indexOf(from, currentReplacementIndex + 1);
 						}
-						InMemoryFileSystem.addFile(filename, originalSourceContents);
+						fileSystem.addFile(filename, originalSourceContents);
 						compile(filename);
 					}
 				}
 			}
 		}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		print("done");
 	}
 	
 	private String escapeSpecialChars(String in) {
@@ -123,25 +140,25 @@ public class MutationRunner extends Thread {
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-		if (Msg.verbose) {
+		if (msg.verbosity >= Msg.VERBOSE) {
 			for (String filename : filenames) {
 				print("Compiling " + filename);
 			}
 		}
 		boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, files).call();
-		if (Msg.verbose) {
+		if (msg.verbosity >= Msg.VERBOSE) {
 			print("Compiled Successfully: " + success);
 		}
 		for(Diagnostic<? extends JavaFileObject> d: diagnostics.getDiagnostics()) {
-			if (Msg.verbose || d.getCode().equals("compiler.err.cant.resolve.location")) {
-				Msg.err(getId() + ": " + d.getMessage(null));
+			if (msg.verbosity >= Msg.NORMAL || d.getCode().equals("compiler.err.cant.resolve.location")) {
+				msg.err(getId() + ": " + d.getMessage(null));
 			}
 		}
 		return success;
 	}
 	
 	private void print(String message) {
-		Msg.msgln(getId() + ": " + message);
+		msg.msgln(getId() + ": " + message);
 	}
 	
 	private String getMutationStrings(boolean fromStrings) {

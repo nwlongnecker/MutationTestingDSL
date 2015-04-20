@@ -4,6 +4,7 @@
 package mut.interpreter;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,6 +18,9 @@ import mut.files.InMemoryFileManager;
 import mut.lexparse.LexerParserFactory;
 import mut.lexparse.MutatorParser;
 import mut.mutator.MutationRunner;
+import mut.statistics.FileStatistics;
+import mut.statistics.StatisticsCollector;
+import mut.statistics.Survivor;
 import mut.util.Msg;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -30,9 +34,13 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collection<String>> {
 	
 	private final InterpreterState state;
+	private final Msg msg;
+	private final List<StatisticsCollector> statistics;
 	
 	public MutatorInterpreter(InterpreterState state) {
 		this.state = state;
+		this.msg = state.getMsg();
+		statistics = new ArrayList<StatisticsCollector>();
 	}
 
 	@Override
@@ -45,49 +53,26 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 		return visitChildren(ctx);
 	}
 	
-	private Collection<String> explodeDirs(Collection<String> files) {
-		Collection<String> filesToAdd = new HashSet<String>();
-		for (String file : files) {
-			File f = new File(file);
-			if (f.isDirectory()) {
-				List<String> list = Arrays.asList(f.list());
-				for(int i = 0; i < list.size(); i++) {
-					String dir = file;
-					if (!file.endsWith("/")) {
-						dir = file + "/";
-					}
-					list.set(i, dir + list.get(i));
-				}
-				filesToAdd.addAll(explodeDirs(list));
-			} else if (f.isFile()) {
-				filesToAdd.add(file);
-			} else {
-				Msg.err(file + " is not a valid file!");
-			}
-		}
-		return filesToAdd;
-	}
-	
 	@Override
 	public Collection<String> visitSource(MutatorParser.SourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.setSourceFiles(explodeDirs(files));
+		state.setSourceFiles(files);
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitTest(MutatorParser.TestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.setTestFiles(explodeDirs(files));
+		state.setTestFiles(files);
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitUse(MutatorParser.UseContext ctx) {
-		Collection<String> files = explodeDirs(ctx.fileList().accept(this));
+		Collection<String> files = ctx.fileList().accept(this);
 		state.addUseFiles(files);
 		for (String filepath : files) {
-			String useCode = FileReader.readFile(filepath);
+			String useCode = FileReader.readFile(filepath, msg);
 			MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(useCode));
 			ParserRuleContext tree = parser.mutFile();
 			tree.accept(this);
@@ -98,40 +83,40 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	@Override
 	public Collection<String> visitAddSource(MutatorParser.AddSourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.addSourceFiles(explodeDirs(files));
+		state.addSourceFiles(files);
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitRemoveSource(MutatorParser.RemoveSourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.removeSourceFiles(explodeDirs(files));
+		state.removeSourceFiles(files);
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitAddTest(MutatorParser.AddTestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.addTestFiles(explodeDirs(files));
+		state.addTestFiles(files);
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitRemoveTest(MutatorParser.RemoveTestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.removeTestFiles(explodeDirs(files));
+		state.removeTestFiles(files);
 		return null;
 	}
 
 	@Override
 	public Collection<String> visitListSource(MutatorParser.ListSourceContext ctx) {
-		Msg.printList("Sources: ", state.getSourceFiles());
+		msg.printList("Sources: ", state.getSourceFiles());
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitListTest(MutatorParser.ListTestContext ctx) {
-		Msg.printList("Tests: ", state.getTestFiles());
+		msg.printList("Tests: ", state.getTestFiles());
 		return null;
 	}
 	
@@ -163,9 +148,11 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 			if (compiler == null) {
 				throw new RuntimeException("No system compiler provided, try running with jdk instead of jre");
 			}
-			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
+			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), state.getFileSystem(), msg);
 
-			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager);
+			StatisticsCollector statisticsCollector = new StatisticsCollector();
+			statistics.add(0, statisticsCollector);
+			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager, statisticsCollector);
 			// If we are testing, keep everything single threaded for predictability
 			if (InterpreterState.TESTING) {
 				runner.run();
@@ -176,6 +163,79 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 		}
 		
 		return null;
+	}
+	
+	@Override
+	public Collection<String> visitReport(MutatorParser.ReportContext ctx) {
+		if (ctx.fileList() != null && !ctx.fileList().isEmpty()) {
+			Collection<String> files = ctx.fileList().accept(this);
+			// Report all for this file
+			if (ctx.ALL() != null) {
+				int total = 0;
+				int totalSurvived = 0;
+				int totalKilled = 0;
+				int totalStillborn = 0;
+				for (String filename : files) {
+					for (StatisticsCollector sc : statistics) {
+						FileStatistics fs = sc.get(filename);
+						total += fs.getTotal();
+						totalSurvived += fs.getSurvived();
+						totalKilled += fs.getKilled();
+						totalStillborn += fs.getStillborn();
+						for (Survivor survivor : fs.getSurvivors()) {
+							msg.msgln(filename + " " + survivor.getLine() + ": Survivor when mutating " + survivor.getFrom() + " to " + survivor.getTo());
+						}
+					}
+				}
+				report(total, totalSurvived, totalKilled, totalStillborn);
+			} else {
+				// Or report the last one
+				int total = 0;
+				int totalSurvived = 0;
+				int totalKilled = 0;
+				int totalStillborn = 0;
+				for (String filename : files) {
+					FileStatistics fs = statistics.get(0).get(filename);
+					total += fs.getTotal();
+					totalSurvived += fs.getSurvived();
+					totalKilled += fs.getKilled();
+					totalStillborn += fs.getStillborn();
+					for (Survivor survivor : fs.getSurvivors()) {
+						msg.msgln(filename + " " + survivor.getLine() + ": Survivor when mutating " + survivor.getFrom() + " to " + survivor.getTo());
+					}
+				}
+				report(total, totalSurvived, totalKilled, totalStillborn);
+			}
+		} else {
+			// Report all
+			if (ctx.ALL() != null) {
+				int total = 0;
+				int totalSurvived = 0;
+				int totalKilled = 0;
+				int totalStillborn = 0;
+				for (StatisticsCollector sc : statistics) {
+					total += sc.getTotal();
+					totalSurvived += sc.getSurvived();
+					totalKilled += sc.getKilled();
+					totalStillborn += sc.getStillborn();
+				}
+				report(total, totalSurvived, totalKilled, totalStillborn);
+			} else {
+				// Or report the last one
+				StatisticsCollector sc = statistics.get(0);
+				report(sc.getTotal(), sc.getSurvived(), sc.getKilled(), sc.getStillborn());
+			}
+		}
+		return null;
+	}
+
+	private void report(int total, int survived, int killed, int stillborn) {
+		int percentSurvived = survived * 100 / total;
+		int percentKilled = killed * 100 / total;
+		int percentStillborn = stillborn * 100 / total;
+		msg.msgln("Total survived: " + survived + " / " + total + " = " + percentSurvived + "%");
+		msg.msgln("Total killed: " + killed + " / " + total + " = " + percentKilled + "%");
+		msg.msgln("Total stillborn: " + stillborn + " / " + total + " = " + percentStillborn + "%");
 	}
 	
 	@Override
@@ -205,9 +265,32 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 			if(f.exists()) {
 				fileList.add(file.getText());
 			} else {
-				Msg.msgln("File " + file.getText() + " does not exist!");
+				msg.msgln("File " + file.getText() + " does not exist!");
 			}
 		}
-		return fileList;
+		return explodeDirs(fileList);
+	}
+	
+	private Collection<String> explodeDirs(Collection<String> files) {
+		Collection<String> filesToAdd = new HashSet<String>();
+		for (String file : files) {
+			File f = new File(file);
+			if (f.isDirectory()) {
+				List<String> list = Arrays.asList(f.list());
+				for(int i = 0; i < list.size(); i++) {
+					String dir = file;
+					if (!file.endsWith("/")) {
+						dir = file + "/";
+					}
+					list.set(i, dir + list.get(i));
+				}
+				filesToAdd.addAll(explodeDirs(list));
+			} else if (f.isFile()) {
+				filesToAdd.add(file);
+			} else {
+				msg.err(file + " is not a valid file!");
+			}
+		}
+		return filesToAdd;
 	}
 }

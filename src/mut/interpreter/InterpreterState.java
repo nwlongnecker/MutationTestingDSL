@@ -6,6 +6,7 @@ import java.util.HashSet;
 import mut.files.FileReader;
 import mut.files.InMemoryFileSystem;
 import mut.symbol.SymbolTable;
+import mut.util.Msg;
 
 /**
  * Class for holding data to maintain state between calls to the interpreter
@@ -22,15 +23,19 @@ public class InterpreterState {
 	private final Collection<String> testFiles;
 	private final Collection<String> useFiles;
 	private final SymbolTable symbolTable;
+	private final InMemoryFileSystem fileSystem;
+	private final Msg msg;
 
 	/**
 	 * Constructs a new interpreter state
 	 */
-	public InterpreterState() {
+	public InterpreterState(Msg msg) {
 		sourceFiles = new HashSet<String>();
 		testFiles = new HashSet<String>();
 		useFiles = new HashSet<String>();
-		symbolTable = new SymbolTable();
+		symbolTable = new SymbolTable(msg);
+		fileSystem = new InMemoryFileSystem();
+		this.msg = msg;
 	}
 
 	/**
@@ -45,13 +50,13 @@ public class InterpreterState {
 	 */
 	public void setSourceFiles(Collection<String> sourceFiles) {
 		for(String filepath : sourceFiles) {
-			String fileContents = FileReader.readFile(filepath);
-			InMemoryFileSystem.addOriginalSourceFile(filepath, fileContents);
-			InMemoryFileSystem.addFile(filepath, fileContents);
+			String fileContents = FileReader.readFile(filepath, msg);
+			fileSystem.addOriginalSourceFile(filepath, fileContents);
+			fileSystem.addFile(filepath, fileContents);
 		}
 		for(String filepath : this.sourceFiles) {
-			InMemoryFileSystem.removeFile(filepath);
-			InMemoryFileSystem.removeOriginalSourceFile(filepath);
+			fileSystem.removeFile(filepath);
+			fileSystem.removeOriginalSourceFile(filepath);
 		}
 		this.sourceFiles.clear();
 		this.sourceFiles.addAll(sourceFiles);
@@ -62,9 +67,9 @@ public class InterpreterState {
 	 */
 	public void addSourceFiles(Collection<String> sourceFiles) {
 		for(String filepath : sourceFiles) {
-			String fileContents = FileReader.readFile(filepath);
-			InMemoryFileSystem.addOriginalSourceFile(filepath, fileContents);
-			InMemoryFileSystem.addFile(filepath, fileContents);
+			String fileContents = FileReader.readFile(filepath, msg);
+			fileSystem.addOriginalSourceFile(filepath, fileContents);
+			fileSystem.addFile(filepath, fileContents);
 		}
 		this.sourceFiles.addAll(sourceFiles);
 	}
@@ -74,8 +79,8 @@ public class InterpreterState {
 	 */
 	public void removeSourceFiles(Collection<String> sourceFiles) {
 		for (String file : sourceFiles) {
-			InMemoryFileSystem.removeFile(file);
-			InMemoryFileSystem.removeOriginalSourceFile(file);
+			fileSystem.removeFile(file);
+			fileSystem.removeOriginalSourceFile(file);
 			this.sourceFiles.remove(file);
 		}
 	}
@@ -92,12 +97,12 @@ public class InterpreterState {
 	 */
 	public void setTestFiles(Collection<String> testFiles) {
 		for (String filepath : testFiles) {
-			String fileContents = FileReader.readFile(filepath);
-			InMemoryFileSystem.addFile(filepath, fileContents);
+			String fileContents = FileReader.readFile(filepath, msg);
+			fileSystem.addFile(filepath, fileContents);
 		}
 		for(String filepath : this.testFiles) {
-			InMemoryFileSystem.removeFile(filepath);
-			InMemoryFileSystem.removeOriginalSourceFile(filepath);
+			fileSystem.removeFile(filepath);
+			fileSystem.removeOriginalSourceFile(filepath);
 		}
 		this.testFiles.clear();
 		this.testFiles.addAll(testFiles);
@@ -108,8 +113,8 @@ public class InterpreterState {
 	 */
 	public void addTestFiles(Collection<String> testFiles) {
 		for (String filepath : testFiles) {
-			String fileContents = FileReader.readFile(filepath);
-			InMemoryFileSystem.addFile(filepath, fileContents);
+			String fileContents = FileReader.readFile(filepath, msg);
+			fileSystem.addFile(filepath, fileContents);
 		}
 		this.testFiles.addAll(testFiles);
 	}
@@ -119,7 +124,7 @@ public class InterpreterState {
 	 */
 	public void removeTestFiles(Collection<String> testFiles) {
 		for (String file : testFiles) {
-			InMemoryFileSystem.removeFile(file);
+			fileSystem.removeFile(file);
 			this.testFiles.remove(file);
 		}
 	}
@@ -143,6 +148,20 @@ public class InterpreterState {
 	 */
 	public SymbolTable getSymbolTable() {
 		return symbolTable;
+	}
+	
+	/**
+	 * @return the fileSystem
+	 */
+	public InMemoryFileSystem getFileSystem() {
+		return fileSystem;
+	}
+
+	/**
+	 * @return the msg
+	 */
+	public Msg getMsg() {
+		return msg;
 	}
 
 }

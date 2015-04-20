@@ -9,11 +9,14 @@ import javax.tools.ToolProvider;
 import mut.files.InMemoryFileManager;
 import mut.interpreter.InterpreterState;
 import mut.mutator.MutationRunner;
+import mut.statistics.StatisticsCollector;
+import mut.util.Msg;
 
 public class MutMain {
 
 	public static void main(String[] args) {
-		InterpreterState state = new InterpreterState();
+		Msg msg = new Msg();
+		InterpreterState state = new InterpreterState(msg);
 		
 		// Start with file names and mutations
 		Collection<String> sourceFilePaths = new HashSet<String>();
@@ -49,11 +52,12 @@ public class MutMain {
 		if (compiler == null) {
 			throw new RuntimeException("No system compiler provided, try running with jdk instead of jre");
 		}
-		InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
+		InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), state.getFileSystem(), msg);
 
-		MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager);
+		StatisticsCollector statistics = new StatisticsCollector();
+		MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager, statistics);
 		runner.start();
-		MutationRunner runner2 = new MutationRunner(state, mutateFrom2, mutateTo2, fileManager);
+		MutationRunner runner2 = new MutationRunner(state, mutateFrom2, mutateTo2, fileManager, statistics);
 		runner2.start();
 	}
 }

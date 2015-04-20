@@ -7,7 +7,8 @@ command :		source | addSource | removeSource | listSource
 				| test | addTest   | removeTest   | listTest
 				| use
 				| strain
-				| mutate ;
+				| mutate
+				| report ;
 
 source :		SOURCE COLON fileList ;
 test :			TEST COLON fileList ;
@@ -23,6 +24,8 @@ listTest :		LIST TEST ;
 strain :		STRAIN ID mutate+ END ;
 
 mutate :		MUTATE (idList | symbolList TO symbolList) ;
+
+report :		REPORT (LAST | ALL) fileList?;
 
 idList :		ID (COMMA ID)* ;
 symbolList :	SYMBOL (COMMA SYMBOL)* ;
@@ -45,6 +48,9 @@ STRAIN :		'strain' ;
 END :			'end' ;
 MUTATE :		'mutate' ;
 TO :			'to' ;
+REPORT :		'report' ;
+LAST :			'last' ;
+ALL :			'all' ;
 
 // The rest
 ID : 			LETTER (LETTER|DIGIT|'_')* ;

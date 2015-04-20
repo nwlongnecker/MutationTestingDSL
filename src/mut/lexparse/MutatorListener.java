@@ -139,6 +139,16 @@ public interface MutatorListener extends ParseTreeListener {
 	 */
 	void exitMutate(MutatorParser.MutateContext ctx);
 	/**
+	 * Enter a parse tree produced by {@link MutatorParser#report}.
+	 * @param ctx the parse tree
+	 */
+	void enterReport(MutatorParser.ReportContext ctx);
+	/**
+	 * Exit a parse tree produced by {@link MutatorParser#report}.
+	 * @param ctx the parse tree
+	 */
+	void exitReport(MutatorParser.ReportContext ctx);
+	/**
 	 * Enter a parse tree produced by {@link MutatorParser#idList}.
 	 * @param ctx the parse tree
 	 */

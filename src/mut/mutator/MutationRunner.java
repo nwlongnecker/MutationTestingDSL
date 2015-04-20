@@ -52,7 +52,7 @@ public class MutationRunner extends Thread {
 		compileFiles.addAll(sourceFiles);
 		compileFiles.addAll(testFiles);
 		if(!compile(compileFiles)) {
-			msg.err(getId() + ": Supplied code does not compile! Did you include every file in the classpath?");
+			msg.err(getId() + ": Supplied code does not compile!");
 			return;
 		}
 		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);

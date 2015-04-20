@@ -3,8 +3,6 @@ package mut.statistics;
 import java.util.HashMap;
 import java.util.Map;
 
-import mut.util.Msg;
-
 public class StatisticsCollector {
 
 	private int totalSurvivedCount;

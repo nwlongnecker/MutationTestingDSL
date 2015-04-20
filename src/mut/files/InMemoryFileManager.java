@@ -39,6 +39,7 @@ public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaF
 			Msg.msgln("Retrieving class loader for location: " + location);
 		}
 		if(locations.contains(location)) {
+			// Must return a new class loader each time otherwise we get errors for trying to redefine a class
 			cl = new InMemoryClassLoader(ClassLoader.getSystemClassLoader(), classes);
 		} else {
 			cl = super.getClassLoader(location);

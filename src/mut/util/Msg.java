@@ -11,13 +11,17 @@ public class Msg {
 	private static PrintStream out;
 	private static PrintStream err;
 	
-	public static boolean verbose = true;
+	public static boolean verbose = false;
 
 	/**
 	 * @param out the out to set
 	 */
 	public static void setOut(PrintStream out) {
 		Msg.out = out;
+	}
+
+	public static void setErr(PrintStream err) {
+		Msg.err = err;
 	}
 	
 	public static void msgln(String message) {

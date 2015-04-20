@@ -85,13 +85,22 @@ public class MutatorMain {
 	/**
 	 * Runs a mutator script
 	 * @param mutatorCode The code to run
+	 * @param initialState the initial state when starting this program
+	 * @return Returns the state of the interpreter after execution
+	 */
+	public static InterpreterState executeScript(String mutatorCode, InterpreterState initialState) {
+		MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(mutatorCode));
+		ParserRuleContext tree = parser.mutFile();
+		tree.accept(new MutatorInterpreter(initialState));
+		return initialState;
+	}
+	
+	/**
+	 * Runs a mutator script
+	 * @param mutatorCode The code to run
 	 * @return Returns the state of the interpreter after execution
 	 */
 	public static InterpreterState executeScript(String mutatorCode) {
-		MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(mutatorCode));
-		ParserRuleContext tree = parser.mutFile();
-		InterpreterState state = new InterpreterState();
-		tree.accept(new MutatorInterpreter(state));
-		return state;
+		return executeScript(mutatorCode, new InterpreterState());
 	}
 }

@@ -51,8 +51,8 @@ public class MutatorMainTest {
 
 	@Test
 	public void setSourcesAndPrint() {
-		String out = doRepl("source: .gitignore, src/\nlist source\nq");
-		assertEquals("> > Sources: .gitignore, src/\r\n> ", out);
+		String out = doRepl("source: .gitignore, sampleMutationFiles/src/\nlist source\nq");
+		assertEquals("> > Sources: .gitignore, sampleMutationFiles/src/LogicalFunctions.java, sampleMutationFiles/src/MathFunctions.java\r\n> ", out);
 	}
 
 	@Test
@@ -63,8 +63,8 @@ public class MutatorMainTest {
 
 	@Test
 	public void addSourcesAndPrint() {
-		String out = doRepl("source: .classpath, src/\nadd source src/mut/MutatorMain.java\nlist source\nq");
-		assertEquals("> > > Sources: .classpath, src/mut/MutatorMain.java, src/\r\n> ", out);
+		String out = doRepl("source: .classpath, sampleMutationFiles/src/\nadd source src/mut/MutatorMain.java\nlist source\nq");
+		assertEquals("> > > Sources: .classpath, src/mut/MutatorMain.java, sampleMutationFiles/src/LogicalFunctions.java, sampleMutationFiles/src/MathFunctions.java\r\n> ", out);
 	}
 
 	@Test
@@ -75,8 +75,8 @@ public class MutatorMainTest {
 
 	@Test
 	public void setTestsAndPrint() {
-		String out = doRepl("test: .classpath, test/\nlist test\nq");
-		assertEquals("> > Tests: .classpath, test/\r\n> ", out);
+		String out = doRepl("test: .classpath, sampleMutationFiles/test/\nlist test\nq");
+		assertEquals("> > Tests: sampleMutationFiles/test/LogicalFunctionsTest.java, .classpath, sampleMutationFiles/test/MathFunctionsTest.java\r\n> ", out);
 	}
 
 	@Test
@@ -87,19 +87,19 @@ public class MutatorMainTest {
 
 	@Test
 	public void addTestsAndPrint() {
-		String out = doRepl("test: .gitignore, test/\nadd test test/mut/MutatorMainTest.java\nlist test\nq");
-		assertEquals("> > > Tests: .gitignore, test/mut/MutatorMainTest.java, test/\r\n> ", out);
+		String out = doRepl("test: .gitignore, sampleMutationFiles/test/\nadd test test/mut/MutatorMainTest.java\nlist test\nq");
+		assertEquals("> > > Tests: .gitignore, sampleMutationFiles/test/LogicalFunctionsTest.java, sampleMutationFiles/test/MathFunctionsTest.java, test/mut/MutatorMainTest.java\r\n> ", out);
 	}
 
 	@Test
 	public void removeTestsAndPrint() {
-		String out = doRepl("test: .gitignore, test/\nremove test .gitignore\nlist test\nq");
-		assertEquals("> > > Tests: test/\r\n> ", out);
+		String out = doRepl("test: .gitignore, test/\nremove test test/\nlist test\nq");
+		assertEquals("> > > Tests: .gitignore\r\n> ", out);
 	}
 
 	@Test
 	public void addUseFile() {
-		String out = doRepl("use .gitignore\nq");
+		String out = doRepl("use sampleMutationFiles/math.mut\nq");
 		assertEquals("> > ", out);
 	}
 

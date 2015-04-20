@@ -37,25 +37,33 @@ public class MutationRunner extends Thread {
 	
 	@Override
 	public void run() {
-		print("Mutating " + getMutationStrings() + " in files " + getShortFileNames(sourceFiles) + " with tests " + getShortFileNames(testFiles));
+		print("Mutating " + getMutationStrings(true) + " to " + getMutationStrings(false) + " in files " + getShortFileNames(sourceFiles) + " with tests " + getShortFileNames(testFiles));
 		
 		// Ensure the tests pass normally
 		Collection<String> compileFiles = new HashSet<String>();
 		compileFiles.addAll(sourceFiles);
 		compileFiles.addAll(testFiles);
-		compile(compileFiles);
+		if(!compile(compileFiles)) {
+			Msg.err(getId() + ": Supplied code does not compile! Did you include every file in the classpath?");
+			return;
+		}
 		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
 		if (origTestRunner.runTests(testFiles).wasSuccessful()) {
-			print("Tests pass on unmutated code: check");
+			if(Msg.verbose) {
+				print("Tests pass on unmutated code: check");
+			}
 		} else {
 			Msg.err(getId() + ": Tests do not pass on unmutated code");
 			return;
 		}
 		
+		// Do the mutations
 		for (String from : mutateFrom) {
 			for (String to : mutateTo) {
 				if (!from.equals(to)) {
-					print("Mutating " + from + " to " + to);
+					if(Msg.verbose) {
+						print("Mutating " + from + " to " + to);
+					}
 					for(String filename : sourceFiles) {
 						String originalSourceContents = InMemoryFileSystem.getOriginalSourceFile(filename);
 						int currentReplacementIndex = originalSourceContents.indexOf(from);
@@ -63,16 +71,23 @@ public class MutationRunner extends Thread {
 							String mutatedSourceContents = originalSourceContents.substring(0, currentReplacementIndex) +
 									originalSourceContents.substring(currentReplacementIndex).replaceFirst(escapeSpecialChars(from), to);
 							InMemoryFileSystem.addFile(filename, mutatedSourceContents);
-							compile(filename);
 							
-							if (Msg.verbose) {
-								print("Testing with " + getShortFileNames(testFiles));
-							}
-							MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
-							if (testRunner.runTests(testFiles).wasSuccessful()) {
-								print(getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Tests passed on mutating " + from + " to " + to);
+							if(compile(filename)) {
+								if (Msg.verbose) {
+									print(getShortFilename(filename) + ": Testing with " + getShortFileNames(testFiles));
+								}
+								MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader());
+								if (testRunner.runTests(testFiles).wasSuccessful()) {
+									print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Mutant survived when mutating " + from + " to " + to);
+								} else {
+									if(Msg.verbose) {
+										print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Tests failed, mutant killed");
+									}
+								}
 							} else {
-								print(getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Tests failed, mutant killed");
+								if (Msg.verbose) {
+									print(getShortFilename(filename) + " " + getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents) + ": Stillborn mutant");
+								}
 							}
 							
 							currentReplacementIndex = originalSourceContents.indexOf(from, currentReplacementIndex + 1);
@@ -94,13 +109,13 @@ public class MutationRunner extends Thread {
 		return "line " + numLines;
 	}
 	
-	private void compile(String filename) {
+	private boolean compile(String filename) {
 		Collection<String> filenames = new HashSet<String>();
 		filenames.add(filename);
-		compile(filenames);
+		return compile(filenames);
 	}
 	
-	private void compile(Collection<String> filenames) {
+	private boolean compile(Collection<String> filenames) {
 		final DiagnosticCollector<JavaFileObject> diagnostics = new  DiagnosticCollector<JavaFileObject>();
 		Collection<JavaFileObject> files = null;
 		try {
@@ -110,27 +125,37 @@ public class MutationRunner extends Thread {
 		}
 		if (Msg.verbose) {
 			for (String filename : filenames) {
-				Msg.msgln("Compiling " + filename);
+				print("Compiling " + filename);
 			}
 		}
 		boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, files).call();
 		if (Msg.verbose) {
-			Msg.msgln("Compiled Successfully: " + success);
+			print("Compiled Successfully: " + success);
 		}
 		for(Diagnostic<? extends JavaFileObject> d: diagnostics.getDiagnostics()) {
-			Msg.err(d.getMessage(null));
+			if (Msg.verbose || d.getCode().equals("compiler.err.cant.resolve.location")) {
+				Msg.err(getId() + ": " + d.getMessage(null));
+			}
 		}
+		return success;
 	}
 	
 	private void print(String message) {
 		Msg.msgln(getId() + ": " + message);
 	}
 	
-	private String getMutationStrings() {
+	private String getMutationStrings(boolean fromStrings) {
 		StringBuilder sb = new StringBuilder();
-		for(String mutation: mutateFrom) {
-			sb.append(',');
-			sb.append(mutation);
+		if (fromStrings) {
+			for(String mutation: mutateFrom) {
+				sb.append(',');
+				sb.append(mutation);
+			}
+		} else {
+			for(String mutation: mutateTo) {
+				sb.append(',');
+				sb.append(mutation);
+			}
 		}
 		final String ret;
 		if (sb.length() > 0) {
@@ -144,9 +169,8 @@ public class MutationRunner extends Thread {
 	private String getShortFileNames(Collection<String> names) {
 		StringBuilder sb = new StringBuilder();
 		for(String name: names) {
-			File f = new File(name);
 			sb.append(',');
-			sb.append(f.getName());
+			sb.append(getShortFilename(name));
 		}
 		final String ret;
 		if (sb.length() > 0) {
@@ -155,5 +179,15 @@ public class MutationRunner extends Thread {
 			ret = "";
 		}
 		return ret;
+	}
+	
+	/**
+	 * Gets the short version of a filename
+	 * @param name The long filename
+	 * @return The short filename
+	 */
+	private String getShortFilename(String name) {
+		File f = new File(name);
+		return f.getName();
 	}
 }

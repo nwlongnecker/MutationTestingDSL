@@ -5,6 +5,7 @@ import java.util.HashSet;
 
 import mut.files.FileReader;
 import mut.files.InMemoryFileSystem;
+import mut.symbol.SymbolTable;
 
 /**
  * Class for holding data to maintain state between calls to the interpreter
@@ -12,9 +13,15 @@ import mut.files.InMemoryFileSystem;
  */
 public class InterpreterState {
 	
+	/**
+	 * Keeps track of whether we are currently testing or not
+	 * If we are testing we won't multithread, otherwise we will
+	 */
+	public static boolean TESTING = false;
 	private final Collection<String> sourceFiles;
 	private final Collection<String> testFiles;
 	private final Collection<String> useFiles;
+	private final SymbolTable symbolTable;
 
 	/**
 	 * Constructs a new interpreter state
@@ -23,6 +30,7 @@ public class InterpreterState {
 		sourceFiles = new HashSet<String>();
 		testFiles = new HashSet<String>();
 		useFiles = new HashSet<String>();
+		symbolTable = new SymbolTable();
 	}
 
 	/**
@@ -128,6 +136,13 @@ public class InterpreterState {
 	 */
 	public void addUseFiles(Collection<String> useFiles) {
 		this.useFiles.addAll(useFiles);
+	}
+
+	/**
+	 * @return the symbolTable
+	 */
+	public SymbolTable getSymbolTable() {
+		return symbolTable;
 	}
 
 }

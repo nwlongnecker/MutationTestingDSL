@@ -1,0 +1,3 @@
+strain math
+	mutate +,-,/,* to +,-,/,*
+end

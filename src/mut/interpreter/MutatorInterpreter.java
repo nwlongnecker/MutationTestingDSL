@@ -4,13 +4,23 @@
 package mut.interpreter;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+import javax.tools.JavaCompiler;
+import javax.tools.ToolProvider;
+
+import mut.files.FileReader;
+import mut.files.InMemoryFileManager;
+import mut.lexparse.LexerParserFactory;
 import mut.lexparse.MutatorParser;
+import mut.mutator.MutationRunner;
 import mut.util.Msg;
 
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 
 /**
@@ -35,52 +45,81 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 		return visitChildren(ctx);
 	}
 	
+	private Collection<String> explodeDirs(Collection<String> files) {
+		Collection<String> filesToAdd = new HashSet<String>();
+		for (String file : files) {
+			File f = new File(file);
+			if (f.isDirectory()) {
+				List<String> list = Arrays.asList(f.list());
+				for(int i = 0; i < list.size(); i++) {
+					String dir = file;
+					if (!file.endsWith("/")) {
+						dir = file + "/";
+					}
+					list.set(i, dir + list.get(i));
+				}
+				filesToAdd.addAll(explodeDirs(list));
+			} else if (f.isFile()) {
+				filesToAdd.add(file);
+			} else {
+				Msg.err(file + " is not a valid file!");
+			}
+		}
+		return filesToAdd;
+	}
+	
 	@Override
 	public Collection<String> visitSource(MutatorParser.SourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.setSourceFiles(files);
+		state.setSourceFiles(explodeDirs(files));
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitTest(MutatorParser.TestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.setTestFiles(files);
+		state.setTestFiles(explodeDirs(files));
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitUse(MutatorParser.UseContext ctx) {
-		Collection<String> files = ctx.fileList().accept(this);
+		Collection<String> files = explodeDirs(ctx.fileList().accept(this));
 		state.addUseFiles(files);
+		for (String filepath : files) {
+			String useCode = FileReader.readFile(filepath);
+			MutatorParser parser = LexerParserFactory.makeParser(new ANTLRInputStream(useCode));
+			ParserRuleContext tree = parser.mutFile();
+			tree.accept(this);
+		}
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitAddSource(MutatorParser.AddSourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.addSourceFiles(files);
+		state.addSourceFiles(explodeDirs(files));
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitRemoveSource(MutatorParser.RemoveSourceContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.removeSourceFiles(files);
+		state.removeSourceFiles(explodeDirs(files));
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitAddTest(MutatorParser.AddTestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.addTestFiles(files);
+		state.addTestFiles(explodeDirs(files));
 		return null;
 	}
 	
 	@Override
 	public Collection<String> visitRemoveTest(MutatorParser.RemoveTestContext ctx) {
 		Collection<String> files = ctx.fileList().accept(this);
-		state.removeTestFiles(files);
+		state.removeTestFiles(explodeDirs(files));
 		return null;
 	}
 
@@ -98,37 +137,64 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	
 	@Override
 	public Collection<String> visitStrain(MutatorParser.StrainContext ctx) {
-		return visitChildren(ctx);
+		state.getSymbolTable().add(ctx.ID().getText(), ctx.mutate());
+		return null;
 	}
 	
 	@Override
 	public Collection<String> visitMutate(MutatorParser.MutateContext ctx) {
-		// Do the mutations
+		// If it is invoking a strain
+		if (ctx.idList() != null) {
+			Collection<String> strains = ctx.idList().accept(this);
+			for (String strain : strains) {
+				List<MutatorParser.MutateContext> mutations = state.getSymbolTable().get(strain);
+				for (MutatorParser.MutateContext mutate : mutations) {
+					mutate.accept(this);
+				}
+			}
+		} else {
+			// If its a standard mutation node
+			// Get the mutation list
+			Collection<String> mutateFrom = ctx.symbolList(0).accept(this);
+			Collection<String> mutateTo = ctx.symbolList(1).accept(this);
+			
+			// Do the mutations
+			JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+			if (compiler == null) {
+				throw new RuntimeException("No system compiler provided, try running with jdk instead of jre");
+			}
+			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
+
+			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager);
+			// If we are testing, keep everything single threaded for predictability
+			if (InterpreterState.TESTING) {
+				runner.run();
+			} else {
+				// Otherwise, multithread for better performance
+				runner.start();
+			}
+		}
 		
-		
-//		// Find the test classes
-//		JUnitCore junit = new JUnitCore();
-//		Collection<Class<?>> classes = new HashSet<Class<?>>();
-//		for (String file : state.getTestFiles()) {
-//			Class<?> c = Utility.getClass(file);
-//			if (c != null) {
-//				classes.add(c);
-//				MutatorRuntime.printMessage("Running " + file + " on mutated code");
-//			}
-//		}
-//		//Run JUnit tests
-//		if (!classes.isEmpty()) {
-//			Result result = junit.run(classes.toArray(new Class<?>[0]));
-//			MutatorRuntime.reportResults(result);
-//		}
-		return null;//visitChildren(ctx);
+		return null;
 	}
 	
 	@Override
-	public Collection<String> visitIdList(MutatorParser.IdListContext ctx) { return visitChildren(ctx); }
+	public Collection<String> visitIdList(MutatorParser.IdListContext ctx) {
+		Collection<String> ids = new HashSet<String>();
+		for(TerminalNode id : ctx.ID()) {
+			ids.add(id.getText());
+		}
+		return ids;
+	}
 	
 	@Override
-	public Collection<String> visitSymbolList(MutatorParser.SymbolListContext ctx) { return visitChildren(ctx); }
+	public Collection<String> visitSymbolList(MutatorParser.SymbolListContext ctx) {
+		Collection<String> symbols = new HashSet<String>();
+		for(TerminalNode symbol : ctx.SYMBOL()) {
+			symbols.add(symbol.getText());
+		}
+		return symbols;
+	}
 	
 	@Override
 	public Collection<String> visitFileList(MutatorParser.FileListContext ctx) {

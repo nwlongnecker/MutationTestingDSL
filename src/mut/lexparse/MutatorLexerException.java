@@ -18,6 +18,11 @@ package mut.lexparse;
 public class MutatorLexerException extends RuntimeException
 {
 	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -7724773254462073045L;
+
+	/**
 	 * Constructor
 	 * @param msg exception description
 	 * @param cause reason for the exception (an exception that occurred in the lexer)

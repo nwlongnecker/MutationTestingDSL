@@ -35,6 +35,13 @@ public class MutMain {
 		mutateTo.add("*");
 		mutateTo.add("/");
 		
+		Collection<String> mutateFrom2 = new HashSet<String>();
+		Collection<String> mutateTo2 = new HashSet<String>();
+		mutateFrom2.add("&&");
+		mutateFrom2.add("||");
+		mutateTo2.add("&&");
+		mutateTo2.add("||");
+		
 		state.setSourceFiles(sourceFilePaths);
 		state.setTestFiles(testFilePaths);
 		
@@ -43,8 +50,10 @@ public class MutMain {
 			throw new RuntimeException("No system compiler provided, try running with jdk instead of jre");
 		}
 		InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null));
-		
+
 		MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager);
 		runner.start();
+		MutationRunner runner2 = new MutationRunner(state, mutateFrom2, mutateTo2, fileManager);
+		runner2.start();
 	}
 }

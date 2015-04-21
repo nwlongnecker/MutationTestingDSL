@@ -50,11 +50,4 @@ public class MutatorJUnitRunner {
 			return null;
 		}
 	}
-	
-	public void runAndReport(Collection<String> fileNames) {
-		if (!fileNames.isEmpty()) {
-			Result result = runTests(fileNames);
-			msg.reportResults(result);
-		}
-	}
 }

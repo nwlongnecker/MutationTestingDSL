@@ -8,6 +8,7 @@ import java.io.PrintStream;
 import mut.interpreter.InterpreterState;
 import mut.util.Msg;
 
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -23,9 +24,13 @@ public class ExecuteScriptTest {
 		InterpreterState.TESTING = true;
 	}
 	
-	private void execute(String script) {
+	@Before
+	public void testSetup() {
 		msg = new Msg();
 		msg.verbosity = Msg.SPARSE;
+	}
+	
+	private void execute(String script) {
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		ByteArrayOutputStream err = new ByteArrayOutputStream();
 		msg.setOut(new PrintStream(out));
@@ -179,7 +184,7 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
-		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
@@ -201,7 +206,7 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
-		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
@@ -224,13 +229,13 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
-		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
 				+ "done\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "done\r\n", outputString);
 	}
 	
@@ -251,13 +256,13 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
-		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
 				+ "done\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "done\r\n", outputString);
 	}
 	
@@ -275,7 +280,7 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/math.mut", state.getUseFiles().toArray()[0]);
-		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+		assertEquals("Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
@@ -302,13 +307,41 @@ public class ExecuteScriptTest {
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
 		assertEquals("Redefined strain math\r\n"
-				+ "Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "Mutating *,+,-,/ to *,+,-,/ in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "MathFunctions.java line 14: Mutant survived when mutating * to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to *\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to +\r\n"
 				+ "MathFunctions.java line 18: Mutant survived when mutating / to -\r\n"
 				+ "done\r\n"
-				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java,MathFunctions.java with tests LogicalFunctionsTest.java,MathFunctionsTest.java\r\n"
+				+ "Mutating &&,|| to ||,&& in files LogicalFunctions.java, MathFunctions.java with tests LogicalFunctionsTest.java, MathFunctionsTest.java\r\n"
 				+ "done\r\n", outputString);
+	}
+	
+	@Test
+	public void useRegexWhenDefiningSource() {
+		execute("source: sampleMutationFiles/src\\*.java "
+				+ "test: sampleMutationFiles\\test/*.java "
+				+ "use sampleMutationFiles/*.mut ");
+		assertEquals(2, state.getSourceFiles().size());
+		assertEquals(2, state.getTestFiles().size());
+		assertEquals("sampleMutationFiles/test/MathFunctionsTest.java", state.getTestFiles().toArray()[1]);
+		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
+		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
+		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
+		assertEquals("sampleMutationFiles/math.mut", state.getUseFiles().toArray()[0]);
+	}
+	
+	@Test
+	public void useStarForMultipleDirectoriesDefiningSource() {
+		execute("source: sampleMutationFiles/src\\*.java "
+				+ "test: sampleMutationFiles*Test.java "
+				+ "use sampleMutationFiles/*.mut ");
+		assertEquals(2, state.getSourceFiles().size());
+		assertEquals(2, state.getTestFiles().size());
+		assertEquals("sampleMutationFiles/test/MathFunctionsTest.java", state.getTestFiles().toArray()[1]);
+		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
+		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
+		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
+		assertEquals("sampleMutationFiles/math.mut", state.getUseFiles().toArray()[0]);
 	}
 }

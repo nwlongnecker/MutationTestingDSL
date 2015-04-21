@@ -1,10 +1,13 @@
 package mut.interpreter;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import mut.files.FileReader;
 import mut.files.InMemoryFileSystem;
+import mut.statistics.StatisticsCollector;
 import mut.symbol.SymbolTable;
 import mut.util.Msg;
 
@@ -25,7 +28,8 @@ public class InterpreterState {
 	private final SymbolTable symbolTable;
 	private final InMemoryFileSystem fileSystem;
 	private final Msg msg;
-
+	private final List<StatisticsCollector> statistics;
+	
 	/**
 	 * Constructs a new interpreter state
 	 */
@@ -36,6 +40,7 @@ public class InterpreterState {
 		symbolTable = new SymbolTable(msg);
 		fileSystem = new InMemoryFileSystem();
 		this.msg = msg;
+		statistics = new ArrayList<StatisticsCollector>();
 	}
 
 	/**
@@ -162,6 +167,13 @@ public class InterpreterState {
 	 */
 	public Msg getMsg() {
 		return msg;
+	}
+
+	/**
+	 * @return the statistics
+	 */
+	public List<StatisticsCollector> getStatistics() {
+		return statistics;
 	}
 
 }

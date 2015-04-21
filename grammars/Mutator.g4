@@ -29,7 +29,7 @@ report :		REPORT (LAST | ALL) fileList?;
 
 idList :		ID (COMMA ID)* ;
 symbolList :	SYMBOL (COMMA SYMBOL)* ;
-fileList :		FILEPATH (COMMA FILEPATH)* ;
+fileList :		(FILEPATH | SYMBOL) (COMMA (FILEPATH | SYMBOL))* ;
 
 /* Lexical rules */
 
@@ -55,16 +55,25 @@ ALL :			'all' ;
 // The rest
 ID : 			LETTER (LETTER|DIGIT|'_')* ;
 // Supposed to match any file or directory name
-FILEPATH :		(DIRNAME '/')* DIRNAME | (DIRNAME)* FILENAME ;
-DIRNAME :		((LETTER|DIGIT|'_')+ | ('.' | '..')) '/'? ;
-FILENAME : 		(LETTER|DIGIT|'_'|'.')+ ;
+FILEPATH :		(DIRNAME SLASH)* DIRNAME | (DIRNAME)* FILENAME ;
+DIRNAME :		((LETTER|DIGIT|UNDERSCORE)+ | (DOT | DOT DOT)) SLASH? ;
+FILENAME : 		(LETTER|DIGIT|UNDERSCORE|DOT)+ ;
 
 WS :			([ \t\r\n] | COMMENT)+ -> skip ;
-COMMENT :		'#' .*? ('\n'|EOF);
+COMMENT :		'#' .*? ('\n'|EOF) ;
 
 // Will probably change, should at least be able to match +, -, &&, ||, etc.
 // Language could/should be expanded to allow other types of mutations
 SYMBOL :		(~([ \t\r\n#,:]))+ ;
+
+fragment
+UNDERSCORE :	'_' ;
+fragment
+DOT :			'.' ;
+fragment
+SLASH :			'/' ;
+fragment
+STAR :			'*' ;
 
 fragment
 LETTER :		[A-Za-z] ;

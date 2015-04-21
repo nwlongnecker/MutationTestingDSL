@@ -9,6 +9,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
@@ -35,12 +37,10 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	
 	private final InterpreterState state;
 	private final Msg msg;
-	private final List<StatisticsCollector> statistics;
 	
 	public MutatorInterpreter(InterpreterState state) {
 		this.state = state;
 		this.msg = state.getMsg();
-		statistics = new ArrayList<StatisticsCollector>();
 	}
 
 	@Override
@@ -151,7 +151,7 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), state.getFileSystem(), msg);
 
 			StatisticsCollector statisticsCollector = new StatisticsCollector();
-			statistics.add(0, statisticsCollector);
+			state.getStatistics().add(0, statisticsCollector);
 			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager, statisticsCollector);
 			// If we are testing, keep everything single threaded for predictability
 			if (InterpreterState.TESTING) {
@@ -176,7 +176,7 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				int totalKilled = 0;
 				int totalStillborn = 0;
 				for (String filename : files) {
-					for (StatisticsCollector sc : statistics) {
+					for (StatisticsCollector sc : state.getStatistics()) {
 						FileStatistics fs = sc.get(filename);
 						total += fs.getTotal();
 						totalSurvived += fs.getSurvived();
@@ -189,13 +189,13 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				}
 				report(total, totalSurvived, totalKilled, totalStillborn);
 			} else {
-				// Or report the last one
+				// Or report the last mutation for this file
 				int total = 0;
 				int totalSurvived = 0;
 				int totalKilled = 0;
 				int totalStillborn = 0;
 				for (String filename : files) {
-					FileStatistics fs = statistics.get(0).get(filename);
+					FileStatistics fs = state.getStatistics().get(0).get(filename);
 					total += fs.getTotal();
 					totalSurvived += fs.getSurvived();
 					totalKilled += fs.getKilled();
@@ -213,7 +213,7 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				int totalSurvived = 0;
 				int totalKilled = 0;
 				int totalStillborn = 0;
-				for (StatisticsCollector sc : statistics) {
+				for (StatisticsCollector sc : state.getStatistics()) {
 					total += sc.getTotal();
 					totalSurvived += sc.getSurvived();
 					totalKilled += sc.getKilled();
@@ -222,7 +222,7 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				report(total, totalSurvived, totalKilled, totalStillborn);
 			} else {
 				// Or report the last one
-				StatisticsCollector sc = statistics.get(0);
+				StatisticsCollector sc = state.getStatistics().get(0);
 				report(sc.getTotal(), sc.getSurvived(), sc.getKilled(), sc.getStillborn());
 			}
 		}
@@ -268,7 +268,54 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				msg.msgln("File " + file.getText() + " does not exist!");
 			}
 		}
+		for (TerminalNode symbol : ctx.SYMBOL()) {
+			String regex = symbol.getText();
+			fileList.addAll(matchDirRegex(".", regex));
+		}
 		return explodeDirs(fileList);
+	}
+	
+	private Collection<String> matchDirRegex(String currentDir, String regex) {
+		Collection<String> fileList = new HashSet<String>();
+		int slashIndex = regex.indexOf('/');
+		System.out.println("Regex: " + regex + " first index of / is " + slashIndex);
+		int backslashIndex = regex.indexOf("\\");
+		System.out.println("Regex: " + regex + " first index of \\ is " + backslashIndex);
+		String nextDirRegex;
+		String remainingRegex;
+		if (slashIndex >= 0 || backslashIndex >= 0) {
+			if ((slashIndex < backslashIndex || backslashIndex < 0) && slashIndex >= 0) {
+				nextDirRegex = regex.substring(0, slashIndex);
+				remainingRegex = regex.substring(slashIndex + 1);
+			} else  {
+				nextDirRegex = regex.substring(0, backslashIndex);
+				remainingRegex = regex.substring(backslashIndex + 1);
+			}
+		} else {
+			return matchRegexInDir(currentDir, regex);
+		}
+		Collection<String> matchedDirs = matchRegexInDir(currentDir, nextDirRegex);
+		for(String dir : matchedDirs) {
+			for (String file : matchDirRegex(currentDir + "/" + dir, remainingRegex)) {
+				fileList.add(dir + "/" + file);
+			}
+		}
+
+		return fileList;
+	}
+	
+	private Collection<String> matchRegexInDir(String dir, String regex) {
+		Collection<String> fileList = new HashSet<String>();
+		File f = new File(dir);
+		Pattern p = Pattern.compile(regex.replace("*", ".*"));
+		List<String> list = Arrays.asList(f.list());
+		for(int i = 0; i < list.size(); i++) {
+			if (p.matcher(list.get(i)).matches()) {
+				System.out.println("Matched " + list.get(i));
+				fileList.add(list.get(i));
+			}
+		}
+		return fileList;
 	}
 	
 	private Collection<String> explodeDirs(Collection<String> files) {

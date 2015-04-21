@@ -66,7 +66,6 @@ public class MutationRunner extends Thread {
 		}
 		
 		// Do the mutations
-		try {
 		for (String from : mutateFrom) {
 			for (String to : mutateTo) {
 				if (!from.equals(to)) {
@@ -110,9 +109,6 @@ public class MutationRunner extends Thread {
 					}
 				}
 			}
-		}
-		} catch (Exception e) {
-			e.printStackTrace();
 		}
 		print("done");
 	}
@@ -186,12 +182,12 @@ public class MutationRunner extends Thread {
 	private String getShortFileNames(Collection<String> names) {
 		StringBuilder sb = new StringBuilder();
 		for(String name: names) {
-			sb.append(',');
+			sb.append(", ");
 			sb.append(getShortFilename(name));
 		}
 		final String ret;
 		if (sb.length() > 0) {
-			ret = sb.toString().substring(1);
+			ret = sb.toString().substring(2);
 		} else {
 			ret = "";
 		}

@@ -3,9 +3,6 @@ package mut.util;
 import java.io.PrintStream;
 import java.util.Collection;
 
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
-
 public class Msg {
 
 	private PrintStream out;
@@ -47,26 +44,6 @@ public class Msg {
 	public void err(String message) {
 		if(err == null) err = System.err;
 		err.println(message);
-	}
-
-	public void reportResults(Result result) {
-		if(out == null) out = System.out;
-		if(verbosity >= NORMAL) {
-			for(Failure fail : result.getFailures()) {
-				out.println(fail.getMessage());
-			}
-			if (!result.wasSuccessful()) {
-				out.println("Mutant killed!");
-			} else {
-				out.println("Mutant survived");
-			}
-		} else {
-			if (!result.wasSuccessful()) {
-				out.println("Mutant killed!");
-			} else {
-				out.println("Mutant survived");
-			}
-		}
 	}
 
 	public void printList(String label, Collection<String> list) {

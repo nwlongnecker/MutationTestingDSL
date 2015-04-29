@@ -11,13 +11,28 @@ import java.util.regex.Pattern;
 
 import javax.tools.JavaFileObject;
 
-public class InMemoryFileSystem {
+public class InMemoryFileSystem implements Cloneable {
 
 	private Map<String, SourceCode> files = new HashMap<String, SourceCode>();
 	private Map<String, String> originalFileContents = new HashMap<String, String>();
 
 	public void addFile(String filepath, String fileSource) {
 		files.put(filepath, new SourceCode(filepath, fileSource));
+	}
+	
+	public Object clone() throws CloneNotSupportedException {
+		InMemoryFileSystem fileSystem = new InMemoryFileSystem();
+		for (String key : files.keySet()) {
+			try {
+				fileSystem.addFile(key, (String)files.get(key).getCharContent(false));
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+		for (String key : originalFileContents.keySet()) {
+			fileSystem.addOriginalSourceFile(key, originalFileContents.get(key));
+		}
+	    return fileSystem;
 	}
 	
 	public SourceCode getFile(String filename) {

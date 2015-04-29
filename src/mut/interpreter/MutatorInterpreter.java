@@ -6,19 +6,16 @@ package mut.interpreter;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import javax.tools.JavaCompiler;
 import javax.tools.ToolProvider;
 
 import mut.files.FileReader;
 import mut.files.InMemoryFileManager;
+import mut.files.InMemoryFileSystem;
 import mut.lexparse.LexerParserFactory;
 import mut.lexparse.MutatorParser;
 import mut.mutator.MutationRunner;
@@ -150,18 +147,25 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 			if (compiler == null) {
 				throw new RuntimeException("No system compiler provided, try running with jdk instead of jre");
 			}
-			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), state.getFileSystem(), msg);
+			InMemoryFileSystem fileSystem = state.getFileSystem();
+			try {
+				fileSystem = (InMemoryFileSystem) state.getFileSystem().clone();
+			} catch (CloneNotSupportedException e) {
+				e.printStackTrace();
+			}
+			InMemoryFileManager fileManager = new InMemoryFileManager(compiler.getStandardFileManager(null, null, null), fileSystem, msg);
 
 			StatisticsCollector statisticsCollector = new StatisticsCollector();
 			state.getStatistics().add(0, statisticsCollector);
 			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager, statisticsCollector);
 			// If we are testing, keep everything single threaded for predictability
-//			if (InterpreterState.TESTING) {
+			if (InterpreterState.TESTING) {
 				runner.run();
-//			} else {
-//				// Otherwise, multithread for better performance
-//				runner.start();
-//			}
+			} else {
+				// Otherwise, multithread for better performance
+				state.addThread(runner);
+				runner.start();
+			}
 		}
 		
 		return null;
@@ -169,6 +173,14 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	
 	@Override
 	public Collection<String> visitReport(MutatorParser.ReportContext ctx) {
+		List<Thread> runningThreads = state.getRunningThreads();
+		while (!runningThreads.isEmpty()) {
+			try {
+				runningThreads.remove(0).join();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
 		if (ctx.fileList() != null && !ctx.fileList().isEmpty()) {
 			Collection<String> files = ctx.fileList().accept(this);
 			// Report all for this file
@@ -232,6 +244,10 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	}
 
 	private void report(int total, int survived, int killed, int stillborn) {
+		if (total == 0) {
+			msg.msgln("No tests were run!");
+			return;
+		}
 		double percentSurvived = round(survived * 100.0 / total, 2);
 		double percentKilled = round(killed * 100.0 / total, 2);
 		double percentStillborn = round(stillborn * 100.0 / total, 2);
@@ -243,7 +259,7 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	
 	public static double round(double value, int places) {
 	    if (places < 0) throw new IllegalArgumentException();
-
+ 
 	    BigDecimal bd = new BigDecimal(value);
 	    bd = bd.setScale(places, RoundingMode.HALF_UP);
 	    return bd.doubleValue();

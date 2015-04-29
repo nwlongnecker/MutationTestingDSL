@@ -141,5 +141,9 @@ public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaF
 	public ClassLoader getClassLoader() {
 		return getClassLoader(StandardLocation.CLASS_OUTPUT);
 	}
+	
+	public InMemoryFileSystem getFileSystem() {
+		return fileSystem;
+	}
 
 }

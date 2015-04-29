@@ -8,6 +8,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
+import java.util.Arrays;
+import java.util.List;
 
 import mut.files.FileReader;
 import mut.interpreter.InterpreterState;
@@ -30,12 +32,21 @@ public class MutatorMain {
 	 */
 	public static void main(String[] args) {
 		Msg msg = new Msg();
-		if(args.length == 0) {
-			System.out.println("Welcome to the Mutator DSL!");
+		List<String> arguments = Arrays.asList(args);
+		int verbosityIndex = -1;
+		if (arguments.contains("-verbosity")) {
+			verbosityIndex = arguments.indexOf("-verbosity");
+			msg.setVerbosity(arguments.get(verbosityIndex + 1));
+			msg.msgln("Set verbosity to " + msg.verbosity);
+		}
+		if(args.length == 0 || (verbosityIndex != -1 && args.length <= 2)) {
+			msg.msgln("Welcome to the Mutator DSL!");
 			repl(System.in, System.out, msg);
 		} else {
-			for (String filename : args) {
-				executeScript(FileReader.readFile(filename, msg), new InterpreterState(msg));
+			for (int i = 0; i < args.length; i++) {
+				if (verbosityIndex == -1 || (i != verbosityIndex && i != verbosityIndex + 1)) {
+					executeScript(FileReader.readFile(args[i], msg), new InterpreterState(msg));
+				}
 			}
 		}
 	}

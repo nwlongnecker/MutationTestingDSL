@@ -62,4 +62,20 @@ public class Msg {
 			out.println(sb.toString());
 		}
 	}
+
+	public void setVerbosity(String verbosity) {
+		if (verbosity.equals("veryverbose")) {
+			this.verbosity = VERY_VERBOSE;
+		} else if (verbosity.equals("verbose")) {
+			this.verbosity = VERBOSE;
+		} else if (verbosity.equals("normal")) {
+			this.verbosity = NORMAL;
+		} else if (verbosity.equals("default")) {
+			this.verbosity = DEFAULT;
+		} else if (verbosity.equals("sparse")) {
+			this.verbosity = SPARSE;
+		} else {
+			this.verbosity = Integer.parseInt(verbosity);
+		}
+	}
 }

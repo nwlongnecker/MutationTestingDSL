@@ -43,7 +43,7 @@ public class MutationRunner extends Thread {
 		this.mutateTo = mutateTo;
 		this.compiler = ToolProvider.getSystemJavaCompiler();
 		this.fileManager = fileManager;
-		this.fileSystem = state.getFileSystem();
+		this.fileSystem = fileManager.getFileSystem();
 		this.msg = state.getMsg();
 		this.statistics = statistics;
 	}
@@ -66,8 +66,8 @@ public class MutationRunner extends Thread {
 		}
 		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);
 
-		
 		Result originalResult = null;
+		PrintStream stdErr = System.err;
 		try {
 			// Hide error message from running the tests
 			// This is not optimal, if there is a problem while running the tests it causes problems
@@ -79,7 +79,7 @@ public class MutationRunner extends Thread {
 			return;
 		} finally {
 			// Reset standard error
-			System.setErr(System.err);
+			System.setErr(stdErr);
 		}
 		if (originalResult.wasSuccessful()) {
 			if(msg.verbosity >= Msg.NORMAL) {
@@ -132,10 +132,10 @@ public class MutationRunner extends Thread {
 									}
 								} catch (Exception e) {
 									print(getShortFilename(filename) + " " + line + ": Error running tests when mutating " + from + " to " + to);
-									e.printStackTrace(System.err);
+									e.printStackTrace(stdErr);
 								} finally {
 									// Reset standard error
-									System.setErr(System.err);
+									System.setErr(stdErr);
 								}
 							} else {
 								statistics.incrementStillborn(filename);

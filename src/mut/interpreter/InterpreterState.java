@@ -29,6 +29,7 @@ public class InterpreterState {
 	private final InMemoryFileSystem fileSystem;
 	private final Msg msg;
 	private final List<StatisticsCollector> statistics;
+	private final List<Thread> runningThreads;
 	
 	/**
 	 * Constructs a new interpreter state
@@ -41,6 +42,7 @@ public class InterpreterState {
 		fileSystem = new InMemoryFileSystem();
 		this.msg = msg;
 		statistics = new ArrayList<StatisticsCollector>();
+		runningThreads = new ArrayList<Thread>();
 	}
 
 	/**
@@ -54,16 +56,16 @@ public class InterpreterState {
 	 * @param sourceFiles the sourceFiles
 	 */
 	public void setSourceFiles(Collection<String> sourceFiles) {
-		for(String filepath : sourceFiles) {
-			String fileContents = FileReader.readFile(filepath, msg);
-			fileSystem.addOriginalSourceFile(filepath, fileContents);
-			fileSystem.addFile(filepath, fileContents);
-		}
 		for(String filepath : this.sourceFiles) {
 			fileSystem.removeFile(filepath);
 			fileSystem.removeOriginalSourceFile(filepath);
 		}
 		this.sourceFiles.clear();
+		for(String filepath : sourceFiles) {
+			String fileContents = FileReader.readFile(filepath, msg);
+			fileSystem.addOriginalSourceFile(filepath, fileContents);
+			fileSystem.addFile(filepath, fileContents);
+		}
 		this.sourceFiles.addAll(sourceFiles);
 	}
 
@@ -174,6 +176,20 @@ public class InterpreterState {
 	 */
 	public List<StatisticsCollector> getStatistics() {
 		return statistics;
+	}
+	
+	/**
+	 * @return the running threads
+	 */
+	public List<Thread> getRunningThreads() {
+		return runningThreads;
+	}
+	
+	/**
+	 * @param t The thread to add
+	 */
+	public void addThread(Thread t) {
+		runningThreads.add(t);
 	}
 
 }

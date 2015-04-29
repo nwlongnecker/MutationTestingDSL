@@ -4,6 +4,8 @@
 package mut.interpreter;
 
 import java.io.File;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -154,12 +156,12 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 			state.getStatistics().add(0, statisticsCollector);
 			MutationRunner runner = new MutationRunner(state, mutateFrom, mutateTo, fileManager, statisticsCollector);
 			// If we are testing, keep everything single threaded for predictability
-			if (InterpreterState.TESTING) {
+//			if (InterpreterState.TESTING) {
 				runner.run();
-			} else {
-				// Otherwise, multithread for better performance
-				runner.start();
-			}
+//			} else {
+//				// Otherwise, multithread for better performance
+//				runner.start();
+//			}
 		}
 		
 		return null;
@@ -230,13 +232,21 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	}
 
 	private void report(int total, int survived, int killed, int stillborn) {
-		double percentSurvived = survived * 100.0 / total;
-		double percentKilled = killed * 100.0 / total;
-		double percentStillborn = stillborn * 100.0 / total;
+		double percentSurvived = round(survived * 100.0 / total, 2);
+		double percentKilled = round(killed * 100.0 / total, 2);
+		double percentStillborn = round(stillborn * 100.0 / total, 2);
 		msg.msgln("Total survived: " + survived + " / " + total + " = " + percentSurvived + "%");
 		msg.msgln("Total killed: " + killed + " / " + total + " = " + percentKilled + "%");
 		msg.msgln("Total stillborn: " + stillborn + " / " + total + " = " + percentStillborn + "%");
-		msg.msgln("Mutation score: " + (killed * 100.0 / (total - stillborn)) + "%");
+		msg.msgln("Mutation score: " + round((killed * 100.0 / (total - stillborn)), 2) + "%");
+	}
+	
+	public static double round(double value, int places) {
+	    if (places < 0) throw new IllegalArgumentException();
+
+	    BigDecimal bd = new BigDecimal(value);
+	    bd = bd.setScale(places, RoundingMode.HALF_UP);
+	    return bd.doubleValue();
 	}
 	
 	@Override

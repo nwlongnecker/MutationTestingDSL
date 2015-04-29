@@ -4,19 +4,14 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
-
-import org.junit.runner.Result;
-import org.junit.runner.notification.Failure;
 
 import mut.files.InMemoryFileManager;
 import mut.files.InMemoryFileSystem;
@@ -25,6 +20,9 @@ import mut.junit.MutatorJUnitRunner;
 import mut.statistics.StatisticsCollector;
 import mut.statistics.Survivor;
 import mut.util.Msg;
+
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 public class MutationRunner extends Thread {
 
@@ -158,7 +156,7 @@ public class MutationRunner extends Thread {
 	}
 	
 	private String escapeSpecialChars(String in) {
-		return "\\" + in;
+		return in.replaceAll("(?=[]\\[+&|!(){}^\"~*?:\\\\-])", "\\\\");
 	}
 	
 	private String getLocInSourceFromIndex(int index, String originalSourceContents) {
@@ -185,18 +183,6 @@ public class MutationRunner extends Thread {
 				print("Compiling " + filename);
 			}
 		}
-//		List<String> options = new ArrayList<String>();
-//		options.add("-classpath");
-//		
-//		// Format the ArrayList as a string, similar to implode
-//	    StringBuilder builder = new StringBuilder();
-//	    for(String s : sourceFiles) {
-//	        builder.append(";");
-//	        builder.append(new File(s).getAbsolutePath());
-//	    }
-//	    builder.append(";");
-//	    builder.append(System.getProperty("java.class.path"));
-//		options.add(builder.toString().substring(1));
 		
 		boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, files).call();
 		if (msg.verbosity >= Msg.VERBOSE) {

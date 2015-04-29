@@ -1,15 +1,22 @@
 package mut.mutator;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
+
+import org.junit.runner.Result;
+import org.junit.runner.notification.Failure;
 
 import mut.files.InMemoryFileManager;
 import mut.files.InMemoryFileSystem;
@@ -45,6 +52,10 @@ public class MutationRunner extends Thread {
 	
 	@Override
 	public void run() {
+		if (testFiles.isEmpty()) {
+			msg.err("No tests files!");
+			return;
+		}
 		print("Mutating " + getMutationStrings(true) + " to " + getMutationStrings(false) + " in files " + getShortFileNames(sourceFiles) + " with tests " + getShortFileNames(testFiles));
 		
 		// Ensure the tests pass normally
@@ -56,12 +67,34 @@ public class MutationRunner extends Thread {
 			return;
 		}
 		MutatorJUnitRunner origTestRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);
-		if (origTestRunner.runTests(testFiles).wasSuccessful()) {
+
+		
+		Result originalResult = null;
+		try {
+			// Hide error message from running the tests
+			// This is not optimal, if there is a problem while running the tests it causes problems
+			System.setErr(new PrintStream(new ByteArrayOutputStream()));
+			originalResult = origTestRunner.runTests(testFiles);
+		} catch (Exception e) {
+			print("Error running tests on unmutated code");
+			e.printStackTrace(System.err);
+			return;
+		} finally {
+			// Reset standard error
+			System.setErr(System.err);
+		}
+		if (originalResult.wasSuccessful()) {
 			if(msg.verbosity >= Msg.NORMAL) {
 				print("Tests pass on unmutated code: check");
 			}
 		} else {
 			msg.err(getId() + ": Tests do not pass on unmutated code");
+			if (msg.verbosity >= Msg.SPARSE) {
+				msg.err(getId() + originalResult.getFailureCount() + " tests failed!");
+				for (Failure fail : originalResult.getFailures()) {
+					msg.err(getId() + fail.getMessage() + " " + fail.getDescription().getDisplayName() + " " + fail.getTrace());
+				}
+			}
 			return;
 		}
 		
@@ -86,14 +119,25 @@ public class MutationRunner extends Thread {
 									print(getShortFilename(filename) + ": Testing with " + getShortFileNames(testFiles));
 								}
 								MutatorJUnitRunner testRunner = new MutatorJUnitRunner(fileManager.getClassLoader(), fileSystem, msg);
-								if (testRunner.runTests(testFiles).wasSuccessful()) {
-									statistics.logSurvivor(filename, new Survivor(line, from, to));
-									print(getShortFilename(filename) + " " + line + ": Mutant survived when mutating " + from + " to " + to);
-								} else {
-									statistics.incrementKilled(filename);
-									if(msg.verbosity >= Msg.NORMAL) {
-										print(getShortFilename(filename) + " " + line + ": Tests failed, mutant killed");
+								try {
+									// Hide error message from running the tests
+									// This is not optimal, if there is a problem while running the tests it causes problems
+									System.setErr(new PrintStream(new ByteArrayOutputStream()));
+									if (testRunner.runTests(testFiles).wasSuccessful()) {
+										statistics.logSurvivor(filename, new Survivor(line, from, to));
+										print(getShortFilename(filename) + " " + line + ": Mutant survived when mutating " + from + " to " + to);
+									} else {
+										statistics.incrementKilled(filename);
+										if(msg.verbosity >= Msg.NORMAL) {
+											print(getShortFilename(filename) + " " + line + ": Tests failed, mutant killed");
+										}
 									}
+								} catch (Exception e) {
+									print(getShortFilename(filename) + " " + line + ": Error running tests when mutating " + from + " to " + to);
+									e.printStackTrace(System.err);
+								} finally {
+									// Reset standard error
+									System.setErr(System.err);
 								}
 							} else {
 								statistics.incrementStillborn(filename);
@@ -125,7 +169,7 @@ public class MutationRunner extends Thread {
 	private boolean compile(String filename) {
 		Collection<String> filenames = new HashSet<String>();
 		filenames.add(filename);
-		return compile(filenames);
+		return compile(sourceFiles);
 	}
 	
 	private boolean compile(Collection<String> filenames) {
@@ -141,6 +185,19 @@ public class MutationRunner extends Thread {
 				print("Compiling " + filename);
 			}
 		}
+//		List<String> options = new ArrayList<String>();
+//		options.add("-classpath");
+//		
+//		// Format the ArrayList as a string, similar to implode
+//	    StringBuilder builder = new StringBuilder();
+//	    for(String s : sourceFiles) {
+//	        builder.append(";");
+//	        builder.append(new File(s).getAbsolutePath());
+//	    }
+//	    builder.append(";");
+//	    builder.append(System.getProperty("java.class.path"));
+//		options.add(builder.toString().substring(1));
+		
 		boolean success = compiler.getTask(null, fileManager, diagnostics, null, null, files).call();
 		if (msg.verbosity >= Msg.VERBOSE) {
 			print("Compiled Successfully: " + success);

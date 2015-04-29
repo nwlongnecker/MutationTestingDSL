@@ -230,12 +230,13 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 	}
 
 	private void report(int total, int survived, int killed, int stillborn) {
-		int percentSurvived = survived * 100 / total;
-		int percentKilled = killed * 100 / total;
-		int percentStillborn = stillborn * 100 / total;
+		double percentSurvived = survived * 100.0 / total;
+		double percentKilled = killed * 100.0 / total;
+		double percentStillborn = stillborn * 100.0 / total;
 		msg.msgln("Total survived: " + survived + " / " + total + " = " + percentSurvived + "%");
 		msg.msgln("Total killed: " + killed + " / " + total + " = " + percentKilled + "%");
 		msg.msgln("Total stillborn: " + stillborn + " / " + total + " = " + percentStillborn + "%");
+		msg.msgln("Mutation score: " + (killed * 100.0 / (total - stillborn)) + "%");
 	}
 	
 	@Override
@@ -270,74 +271,8 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 		}
 		for (TerminalNode symbol : ctx.SYMBOL()) {
 			String regex = symbol.getText();
-			fileList.addAll(matchDirRegex(".", regex));
+			fileList.addAll(FileReader.matchDirRegex(".", regex));
 		}
-		return explodeDirs(fileList);
-	}
-	
-	private Collection<String> matchDirRegex(String currentDir, String regex) {
-		Collection<String> fileList = new HashSet<String>();
-		int slashIndex = regex.indexOf('/');
-		System.out.println("Regex: " + regex + " first index of / is " + slashIndex);
-		int backslashIndex = regex.indexOf("\\");
-		System.out.println("Regex: " + regex + " first index of \\ is " + backslashIndex);
-		String nextDirRegex;
-		String remainingRegex;
-		if (slashIndex >= 0 || backslashIndex >= 0) {
-			if ((slashIndex < backslashIndex || backslashIndex < 0) && slashIndex >= 0) {
-				nextDirRegex = regex.substring(0, slashIndex);
-				remainingRegex = regex.substring(slashIndex + 1);
-			} else  {
-				nextDirRegex = regex.substring(0, backslashIndex);
-				remainingRegex = regex.substring(backslashIndex + 1);
-			}
-		} else {
-			return matchRegexInDir(currentDir, regex);
-		}
-		Collection<String> matchedDirs = matchRegexInDir(currentDir, nextDirRegex);
-		for(String dir : matchedDirs) {
-			for (String file : matchDirRegex(currentDir + "/" + dir, remainingRegex)) {
-				fileList.add(dir + "/" + file);
-			}
-		}
-
-		return fileList;
-	}
-	
-	private Collection<String> matchRegexInDir(String dir, String regex) {
-		Collection<String> fileList = new HashSet<String>();
-		File f = new File(dir);
-		Pattern p = Pattern.compile(regex.replace("*", ".*"));
-		List<String> list = Arrays.asList(f.list());
-		for(int i = 0; i < list.size(); i++) {
-			if (p.matcher(list.get(i)).matches()) {
-				System.out.println("Matched " + list.get(i));
-				fileList.add(list.get(i));
-			}
-		}
-		return fileList;
-	}
-	
-	private Collection<String> explodeDirs(Collection<String> files) {
-		Collection<String> filesToAdd = new HashSet<String>();
-		for (String file : files) {
-			File f = new File(file);
-			if (f.isDirectory()) {
-				List<String> list = Arrays.asList(f.list());
-				for(int i = 0; i < list.size(); i++) {
-					String dir = file;
-					if (!file.endsWith("/")) {
-						dir = file + "/";
-					}
-					list.set(i, dir + list.get(i));
-				}
-				filesToAdd.addAll(explodeDirs(list));
-			} else if (f.isFile()) {
-				filesToAdd.add(file);
-			} else {
-				msg.err(file + " is not a valid file!");
-			}
-		}
-		return filesToAdd;
+		return FileReader.explodeDirs(fileList);
 	}
 }

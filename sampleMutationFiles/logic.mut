@@ -1,3 +1,7 @@
 strain logic
 	mutate &&,|| to &&,||
 end
+
+strain comparators
+	mutate <,>,<=,>= to <,>,<=,>=
+end

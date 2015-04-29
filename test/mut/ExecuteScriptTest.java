@@ -1,6 +1,7 @@
 package mut;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
@@ -337,11 +338,26 @@ public class ExecuteScriptTest {
 				+ "test: sampleMutationFiles*Test.java "
 				+ "use sampleMutationFiles/*.mut ");
 		assertEquals(2, state.getSourceFiles().size());
+		assertEquals(2, state.getUseFiles().size());
 		assertEquals(2, state.getTestFiles().size());
 		assertEquals("sampleMutationFiles/test/MathFunctionsTest.java", state.getTestFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/test/LogicalFunctionsTest.java", state.getTestFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/src/MathFunctions.java", state.getSourceFiles().toArray()[1]);
 		assertEquals("sampleMutationFiles/src/LogicalFunctions.java", state.getSourceFiles().toArray()[0]);
 		assertEquals("sampleMutationFiles/math.mut", state.getUseFiles().toArray()[0]);
+	}
+	
+	@Test
+	public void useMultipleStars() {
+		execute("source: src/*lexparse/*.tok* ");
+		assertEquals(2, state.getSourceFiles().size());
+		assertTrue(state.getSourceFiles().contains("src/mut/lexparse/Mutator.tokens"));
+		assertTrue(state.getSourceFiles().contains("src/mut/lexparse/MutatorLexer.tokens"));
+	}
+	
+	@Test
+	public void mutateMutatorTestProject() {
+		execute("source: ../Mutator*/src/*.java test: ../Mutator*/test/*.java use *.mut mutate math report last");
+		System.out.println(outputString);
 	}
 }

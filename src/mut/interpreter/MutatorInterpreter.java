@@ -21,7 +21,7 @@ import mut.lexparse.MutatorParser;
 import mut.mutator.MutationRunner;
 import mut.statistics.FileStatistics;
 import mut.statistics.StatisticsCollector;
-import mut.statistics.Survivor;
+import mut.statistics.Mutation;
 import mut.util.Msg;
 
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -181,88 +181,40 @@ public class MutatorInterpreter extends mut.lexparse.MutatorBaseVisitor<Collecti
 				e.printStackTrace();
 			}
 		}
+		StatisticsReporter reporter = new StatisticsReporter(msg, state.getStatistics());
 		if (ctx.fileList() != null && !ctx.fileList().isEmpty()) {
 			Collection<String> files = ctx.fileList().accept(this);
-			// Report all for this file
 			if (ctx.ALL() != null) {
-				int total = 0;
-				int totalSurvived = 0;
-				int totalKilled = 0;
-				int totalStillborn = 0;
-				for (String filename : files) {
-					for (StatisticsCollector sc : state.getStatistics()) {
-						FileStatistics fs = sc.get(filename);
-						total += fs.getTotal();
-						totalSurvived += fs.getSurvived();
-						totalKilled += fs.getKilled();
-						totalStillborn += fs.getStillborn();
-						for (Survivor survivor : fs.getSurvivors()) {
-							msg.msgln(filename + " " + survivor.getLine() + ": Survivor when mutating " + survivor.getFrom() + " to " + survivor.getTo());
-						}
-					}
-				}
-				report(total, totalSurvived, totalKilled, totalStillborn);
+				reporter.reportAllForFiles(files);
 			} else {
-				// Or report the last mutation for this file
-				int total = 0;
-				int totalSurvived = 0;
-				int totalKilled = 0;
-				int totalStillborn = 0;
-				for (String filename : files) {
-					FileStatistics fs = state.getStatistics().get(0).get(filename);
-					total += fs.getTotal();
-					totalSurvived += fs.getSurvived();
-					totalKilled += fs.getKilled();
-					totalStillborn += fs.getStillborn();
-					for (Survivor survivor : fs.getSurvivors()) {
-						msg.msgln(filename + " " + survivor.getLine() + ": Survivor when mutating " + survivor.getFrom() + " to " + survivor.getTo());
-					}
-				}
-				report(total, totalSurvived, totalKilled, totalStillborn);
+				reporter.reportLastForFiles(files);
+			}
+		} else if(ctx.SURVIVED() != null) {
+			if (ctx.ALL() != null) {
+				reporter.reportAllSurvived();
+			} else {
+				reporter.reportLastSurvived();
+			}
+		} else if(ctx.STILLBORN() != null) {
+			if (ctx.ALL() != null) {
+				reporter.reportAllStillborn();
+			} else {
+				reporter.reportLastStillborn();
+			}
+		} else if(ctx.KILLED() != null) {
+			if (ctx.ALL() != null) {
+				reporter.reportAllKilled();
+			} else {
+				reporter.reportLastKilled();
 			}
 		} else {
-			// Report all
 			if (ctx.ALL() != null) {
-				int total = 0;
-				int totalSurvived = 0;
-				int totalKilled = 0;
-				int totalStillborn = 0;
-				for (StatisticsCollector sc : state.getStatistics()) {
-					total += sc.getTotal();
-					totalSurvived += sc.getSurvived();
-					totalKilled += sc.getKilled();
-					totalStillborn += sc.getStillborn();
-				}
-				report(total, totalSurvived, totalKilled, totalStillborn);
+				reporter.reportAll();
 			} else {
-				// Or report the last one
-				StatisticsCollector sc = state.getStatistics().get(0);
-				report(sc.getTotal(), sc.getSurvived(), sc.getKilled(), sc.getStillborn());
+				reporter.reportLast();
 			}
 		}
 		return null;
-	}
-
-	private void report(int total, int survived, int killed, int stillborn) {
-		if (total == 0) {
-			msg.msgln("No tests were run!");
-			return;
-		}
-		double percentSurvived = round(survived * 100.0 / total, 2);
-		double percentKilled = round(killed * 100.0 / total, 2);
-		double percentStillborn = round(stillborn * 100.0 / total, 2);
-		msg.msgln("Total survived: " + survived + " / " + total + " = " + percentSurvived + "%");
-		msg.msgln("Total killed: " + killed + " / " + total + " = " + percentKilled + "%");
-		msg.msgln("Total stillborn: " + stillborn + " / " + total + " = " + percentStillborn + "%");
-		msg.msgln("Mutation score: " + round((killed * 100.0 / (total - stillborn)), 2) + "%");
-	}
-	
-	public static double round(double value, int places) {
-	    if (places < 0) throw new IllegalArgumentException();
- 
-	    BigDecimal bd = new BigDecimal(value);
-	    bd = bd.setScale(places, RoundingMode.HALF_UP);
-	    return bd.doubleValue();
 	}
 	
 	@Override

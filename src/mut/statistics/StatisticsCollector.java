@@ -1,5 +1,6 @@
 package mut.statistics;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -17,17 +18,17 @@ public class StatisticsCollector {
 		fileStatistics = new HashMap<String, FileStatistics>();
 	}
 	
-	public void incrementKilled(String filename) {
+	public void logKilled(String filename, Mutation killed) {
 		totalKilledCount++;
-		get(filename).incrementKilled();
+		get(filename).incrementKilled(killed);
 	}
 	
-	public void incrementStillborn(String filename) {
+	public void logStillborn(String filename, Mutation stillborn) {
 		totalStillbornCount++;
-		get(filename).incrementStillborn();
+		get(filename).incrementStillborn(stillborn);
 	}
 	
-	public void logSurvivor(String filename, Survivor survivor) {
+	public void logSurvivor(String filename, Mutation survivor) {
 		totalSurvivedCount++;
 		get(filename).logSurvivor(survivor);
 	}
@@ -53,5 +54,9 @@ public class StatisticsCollector {
 	
 	public int getStillborn() {
 		return totalStillbornCount;
+	}
+	
+	public Collection<FileStatistics> getFileStatistics() {
+		return fileStatistics.values();
 	}
 }

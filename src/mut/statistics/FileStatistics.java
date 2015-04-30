@@ -8,7 +8,9 @@ public class FileStatistics {
 	private int killedCount;
 	private int stillbornCount;
 	private int survivedCount;
-	private final List<Survivor> survivors;
+	private final List<Mutation> survivors;
+	private final List<Mutation> killed;
+	private final List<Mutation> stillborn;
 	private String filename;
 	
 	public FileStatistics(String filename) {
@@ -16,39 +18,58 @@ public class FileStatistics {
 		killedCount = 0;
 		stillbornCount = 0;
 		survivedCount = 0;
-		survivors = new ArrayList<Survivor>();
+		survivors = new ArrayList<Mutation>();
+		stillborn = new ArrayList<Mutation>();
+		killed = new ArrayList<Mutation>();
 	}
 	
-	public void incrementKilled() {
+	public void incrementKilled(Mutation killed) {
 		killedCount++;
+		this.killed.add(killed);
 	}
 	
-	public void incrementStillborn() {
+	public void incrementStillborn(Mutation stillborn) {
 		stillbornCount++;
+		this.stillborn.add(stillborn);
 	}
 	
-	public void logSurvivor(Survivor survivor) {
+	public void logSurvivor(Mutation survivor) {
 		survivedCount++;
 		survivors.add(survivor);
 	}
 	
-	public List<Survivor> getSurvivors() {
+	public List<Mutation> getSurvivors() {
 		return survivors;
+	}
+	
+	public List<Mutation> getStillborn() {
+		return stillborn;
+	}
+	
+	public List<Mutation> getKilled() {
+		return killed;
 	}
 	
 	public int getTotal() {
 		return survivedCount + stillbornCount + killedCount;
 	}
 	
-	public int getSurvived() {
+	public int getSurvivedCount() {
 		return survivedCount;
 	}
 	
-	public int getKilled() {
+	public int getKilledCount() {
 		return killedCount;
 	}
 	
-	public int getStillborn() {
+	public int getStillbornCount() {
 		return stillbornCount;
+	}
+
+	/**
+	 * @return the filename
+	 */
+	public String getFilename() {
+		return filename;
 	}
 }

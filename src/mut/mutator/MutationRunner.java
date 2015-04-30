@@ -18,7 +18,7 @@ import mut.files.InMemoryFileSystem;
 import mut.interpreter.InterpreterState;
 import mut.junit.MutatorJUnitRunner;
 import mut.statistics.StatisticsCollector;
-import mut.statistics.Survivor;
+import mut.statistics.Mutation;
 import mut.util.Msg;
 
 import org.junit.runner.Result;
@@ -122,10 +122,10 @@ public class MutationRunner extends Thread {
 									// This is not optimal, if there is a problem while running the tests it causes problems
 									System.setErr(new PrintStream(new ByteArrayOutputStream()));
 									if (testRunner.runTests(testFiles).wasSuccessful()) {
-										statistics.logSurvivor(filename, new Survivor(line, from, to));
+										statistics.logSurvivor(filename, new Mutation(line, from, to));
 										print(getShortFilename(filename) + " " + line + ": Mutant survived when mutating " + from + " to " + to);
 									} else {
-										statistics.incrementKilled(filename);
+										statistics.logKilled(filename, new Mutation(line, from, to));
 										if(msg.verbosity >= Msg.NORMAL) {
 											print(getShortFilename(filename) + " " + line + ": Tests failed, mutant killed");
 										}
@@ -138,7 +138,7 @@ public class MutationRunner extends Thread {
 									System.setErr(stdErr);
 								}
 							} else {
-								statistics.incrementStillborn(filename);
+								statistics.logStillborn(filename, new Mutation(line, from, to));
 								if (msg.verbosity >= Msg.NORMAL) {
 									print(getShortFilename(filename) + " " + line + ": Stillborn mutant");
 								}

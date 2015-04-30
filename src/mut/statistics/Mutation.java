@@ -1,12 +1,12 @@
 package mut.statistics;
 
-public class Survivor {
+public class Mutation {
 
 	private final String line;
 	private final String from;
 	private final String to;
 	
-	public Survivor(String line, String from, String to) {
+	public Mutation(String line, String from, String to) {
 		this.line = line;
 		this.from = from;
 		this.to = to;

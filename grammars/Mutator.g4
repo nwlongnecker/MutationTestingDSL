@@ -25,7 +25,7 @@ strain :		STRAIN ID mutate+ END ;
 
 mutate :		MUTATE (idList | symbolList TO symbolList) ;
 
-report :		REPORT (LAST | ALL) fileList?;
+report :		REPORT (LAST | ALL) ((SURVIVED | KILLED | STILLBORN) | fileList)?;
 
 idList :		ID (COMMA ID)* ;
 symbolList :	SYMBOL (COMMA SYMBOL)* ;
@@ -51,6 +51,9 @@ TO :			'to' ;
 REPORT :		'report' ;
 LAST :			'last' ;
 ALL :			'all' ;
+SURVIVED :		'survived' ;
+KILLED :		'killed' ;
+STILLBORN :		'stillborn' ;
 
 // The rest
 ID : 			LETTER (LETTER|DIGIT|'_')* ;

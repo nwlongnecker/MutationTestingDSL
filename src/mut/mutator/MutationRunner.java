@@ -112,7 +112,7 @@ public class MutationRunner extends Thread {
 							fileSystem.addFile(filename, mutatedSourceContents);
 							String line = getLocInSourceFromIndex(currentReplacementIndex, originalSourceContents);
 							
-							if(compile(filename)) {
+							if(compile(sourceFiles)) {
 								if (msg.verbosity >= Msg.VERBOSE) {
 									print(getShortFilename(filename) + ": Testing with " + getShortFileNames(testFiles));
 								}
@@ -147,7 +147,7 @@ public class MutationRunner extends Thread {
 							currentReplacementIndex = originalSourceContents.indexOf(from, currentReplacementIndex + 1);
 						}
 						fileSystem.addFile(filename, originalSourceContents);
-						compile(filename);
+						compile(sourceFiles);
 					}
 				}
 			}
@@ -162,12 +162,6 @@ public class MutationRunner extends Thread {
 	private String getLocInSourceFromIndex(int index, String originalSourceContents) {
         int numLines = originalSourceContents.substring(0, index).split("\r?\n").length;
 		return "line " + numLines;
-	}
-	
-	private boolean compile(String filename) {
-		Collection<String> filenames = new HashSet<String>();
-		filenames.add(filename);
-		return compile(sourceFiles);
 	}
 	
 	private boolean compile(Collection<String> filenames) {

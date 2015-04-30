@@ -103,15 +103,14 @@ public class InterpreterState {
 	 * @param testFiles the testFiles
 	 */
 	public void setTestFiles(Collection<String> testFiles) {
+		for(String filepath : this.testFiles) {
+			fileSystem.removeFile(filepath);
+		}
+		this.testFiles.clear();
 		for (String filepath : testFiles) {
 			String fileContents = FileReader.readFile(filepath, msg);
 			fileSystem.addFile(filepath, fileContents);
 		}
-		for(String filepath : this.testFiles) {
-			fileSystem.removeFile(filepath);
-			fileSystem.removeOriginalSourceFile(filepath);
-		}
-		this.testFiles.clear();
 		this.testFiles.addAll(testFiles);
 	}
 

@@ -5,6 +5,10 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+/**
+ * A class for controlling the output of the program. All print statements go through this class
+ * @author Nathan Longnecker
+ */
 public class Msg {
 
 	private PrintStream out;
@@ -18,6 +22,9 @@ public class Msg {
 	
 	public int verbosity;
 	
+	/**
+	 * Constructs a new messager with default verbosity
+	 */
 	public Msg() {
 		verbosity = DEFAULT;
 	}
@@ -29,25 +36,45 @@ public class Msg {
 		this.out = out;
 	}
 
+	/**
+	 * @param err the err to set
+	 */
 	public void setErr(PrintStream err) {
 		this.err = err;
 	}
 	
+	/**
+	 * Prints a message to the output with a line terminator
+	 * @param message The message to print
+	 */
 	public void msgln(String message) {
 		if(out == null) out = System.out;
 		out.println(message);
 	}
 	
+	/**
+	 * Prints a message to the output with no line terminator
+	 * @param message The message to print
+	 */
 	public void msg(String message) {
 		if(out == null) out = System.out;
 		out.print(message);
 	}
 	
+	/**
+	 * Prints an error message line to the err
+	 * @param message The message to print
+	 */
 	public void err(String message) {
 		if(err == null) err = System.err;
 		err.println(message);
 	}
 
+	/**
+	 * Prints a comma separated list of strings prepended by a label
+	 * @param label The label to prepend to the output
+	 * @param list The list of strings to print
+	 */
 	public void printList(String label, Collection<String> list) {
 		if(out == null) out = System.out;
 		StringBuilder sb = new StringBuilder();
@@ -63,6 +90,10 @@ public class Msg {
 		}
 	}
 
+	/**
+	 * Sets the verbosity of this message object
+	 * @param verbosity The verbosity setting
+	 */
 	public void setVerbosity(String verbosity) {
 		if (verbosity.equals("veryverbose")) {
 			this.verbosity = VERY_VERBOSE;

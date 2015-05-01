@@ -13,7 +13,7 @@ import mut.util.Msg;
 
 /**
  * Class for holding data to maintain state between calls to the interpreter
- * @author Nathan
+ * @author Nathan Longnecker
  */
 public class InterpreterState {
 	

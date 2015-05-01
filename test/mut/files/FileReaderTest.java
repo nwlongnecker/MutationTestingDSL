@@ -9,9 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Collection;
 
-import mut.files.FileReader;
-import mut.interpreter.InterpreterState;
-import mut.interpreter.MutatorInterpreter;
 import mut.util.Msg;
 
 import org.junit.Test;

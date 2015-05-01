@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.net.URI;
 
 /**
+ * Taken from https://github.com/trung/InMemoryJavaCompiler
  * Created by trung on 5/3/15.
  */
 public class SourceCode extends SimpleJavaFileObject {

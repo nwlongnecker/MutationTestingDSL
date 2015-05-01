@@ -12,6 +12,10 @@ import java.util.regex.Pattern;
 
 import mut.util.Msg;
 
+/**
+ * Static class for handling reading files from the disk and most disk interaction.
+ * @author Nathan Longnecker
+ */
 public class FileReader {
 	
 	/**
@@ -30,6 +34,13 @@ public class FileReader {
 		return ret;
 	}
 	
+	/**
+	 * Find all the file names that match the given regex relative to the current directory.
+	 * Recursively searches subdirectories of the current directory.
+	 * @param currentDir The current working directory
+	 * @param regex The filename regex to match with
+	 * @return A list of filenames that match the regex
+	 */
 	public static Collection<String> matchDirRegex(String currentDir, String regex) {
 		Collection<String> fileList = new HashSet<String>();
 		int slashIndex = regex.indexOf('/');
@@ -84,6 +95,12 @@ public class FileReader {
 		return fileList;
 	}
 	
+	/**
+	 * Helper function. Matches the files in the specified directory with the regex
+	 * @param dir The directory to match in
+	 * @param regex The regex to match with
+	 * @return A list of files in the specified directory that match the regex
+	 */
 	static Collection<String> matchRegexInDir(String dir, String regex) {
 		Collection<String> fileList = new HashSet<String>();
 		File f = new File(dir);
@@ -97,6 +114,12 @@ public class FileReader {
 		return fileList;
 	}
 	
+	/**
+	 * Matches all the files in the directory and subdirectories with the given regex
+	 * @param baseDir The directory to begin searching in
+	 * @param regex The regex to match the filenames against
+	 * @return A list of all the files that match the regex in the directory and subdirectories
+	 */
 	static Collection<String> findMatchingFilesInDirTree(String baseDir, String regex) {
 		Collection<String> fileList = new HashSet<String>();
 		Pattern p = Pattern.compile(regex.replace("*", ".*"));
@@ -109,6 +132,13 @@ public class FileReader {
 		return fileList;
 	}
 	
+	/**
+	 * Recursively gets a list of all the files in the specified directory
+	 * and in subdirectories.
+	 * @param baseDir The base directory to being searching for files in.
+	 * @param currentSubdir The current subdirectory. Should start as an empty string.
+	 * @return A list of all the files in the baseDir, with relative pathnames
+	 */
 	static Collection<String> getAllFilesInDir(String baseDir, String currentSubdir) {
 		Collection<String> fileList = new HashSet<String>();
 		File base = new File(baseDir + "/" + currentSubdir);
@@ -127,6 +157,11 @@ public class FileReader {
 		return fileList;
 	}
 	
+	/**
+	 * Checks a list of files for directories and expands any directories in to full pathnames
+	 * @param files A list of filenames to check
+	 * @return A list of complete filenames, no directory names will be included
+	 */
 	public static Collection<String> explodeDirs(Collection<String> files) {
 		Collection<String> filesToAdd = new HashSet<String>();
 		for (String file : files) {

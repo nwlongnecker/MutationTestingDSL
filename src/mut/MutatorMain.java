@@ -28,7 +28,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 public class MutatorMain {
 
 	/**
-	 * @param args Arguments
+	 * Runs the mutator in the mode specified by the arguments
+	 * @param args Arguments. Use -verbose to change the verbosity settings,
+	 * any other arguments should be script names. If there are no file names, runs in repl mode.
 	 */
 	public static void main(String[] args) {
 		Msg msg = new Msg();

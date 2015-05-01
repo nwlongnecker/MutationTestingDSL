@@ -9,6 +9,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 
 /**
+ * Taken from https://github.com/trung/InMemoryJavaCompiler
  * Created by trung on 5/3/15.
  */
 public class CompiledCode extends SimpleJavaFileObject {

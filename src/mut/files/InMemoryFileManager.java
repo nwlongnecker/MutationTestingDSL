@@ -18,6 +18,10 @@ import mut.classload.CompiledClasses;
 import mut.classload.InMemoryClassLoader;
 import mut.util.Msg;
 
+/**
+ * A custom JavaFileManager implementation to allow the JavaCompiler to interface with the InMemoryFileSystem
+ * @author Nathan Longnecker
+ */
 public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
 	
 	private Set<StandardLocation> locations;
@@ -25,6 +29,12 @@ public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaF
 	private InMemoryFileSystem fileSystem;
 	private Msg msg;
 	
+	/**
+	 * Constructor
+	 * @param fileManager The parent filemanager
+	 * @param fileSystem The InMemoryFileSystem to use
+	 * @param msg The message logger to print to
+	 */
 	public InMemoryFileManager(StandardJavaFileManager fileManager, InMemoryFileSystem fileSystem, Msg msg) {
 		super(fileManager);
 		locations = new HashSet<StandardLocation>();
@@ -130,6 +140,13 @@ public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaF
 		// Does nothing
 	}
 
+	/**
+	 * Converts a list of filenames to a list of JavaFileObjects for writing
+	 * @param filePaths The list of filenames to create JavaFileObjects for
+	 * @param kind The kind of file objects to make
+	 * @return Returns a list of file objects ready to read from or write to
+	 * @throws IOException This implementation should never throw an IOException, because it does not read and write to files
+	 */
 	public Collection<JavaFileObject> getJavaFileObjectsForInputFromStrings(Collection<String> filePaths, JavaFileObject.Kind kind) throws IOException {
 		Collection<JavaFileObject> fileObjects = new HashSet<JavaFileObject>();
 		for (String filePath : filePaths) {
@@ -138,10 +155,16 @@ public class InMemoryFileManager extends ForwardingJavaFileManager<StandardJavaF
 		return fileObjects;
 	}
 	
+	/**
+	 * @return a classloader
+	 */
 	public ClassLoader getClassLoader() {
 		return getClassLoader(StandardLocation.CLASS_OUTPUT);
 	}
 	
+	/**
+	 * @return the InMemoryFileSystem
+	 */
 	public InMemoryFileSystem getFileSystem() {
 		return fileSystem;
 	}

@@ -1,5 +1,9 @@
 package mut.symbol;
 
+/**
+ * A symbol exception
+ * @author Nathan Longnecker
+ */
 public class SymbolException extends RuntimeException {
 
 	public SymbolException(String msg) {

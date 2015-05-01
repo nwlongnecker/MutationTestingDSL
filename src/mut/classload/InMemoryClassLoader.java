@@ -3,11 +3,21 @@ package mut.classload;
 import mut.files.CompiledCode;
 import mut.util.Msg;
 
+/**
+ * Custom class loader for loading class files from memory
+ * @author Nathan Longnecker
+ */
 public class InMemoryClassLoader extends ClassLoader {
 	
 	private CompiledClasses compiledClasses;
 	private Msg msg;
 
+	/**
+	 * Constructor
+	 * @param parent The parent ClassLoader
+	 * @param compiledClasses The compiled classes to search for classes
+	 * @param msg A logging object to write to
+	 */
 	public InMemoryClassLoader(ClassLoader parent, CompiledClasses compiledClasses, Msg msg) {
 		super(parent);
 		this.compiledClasses = compiledClasses;
